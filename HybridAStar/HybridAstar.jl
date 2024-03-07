@@ -1,4 +1,5 @@
-include("ReedsSheppsCurves.jl")
+include("../ReedsSheppsCurves/ReedsSheppsCurves.jl")
+using Plots
 
 function neighbor_origin(T, steer_set, gear_set) #init at [0,0,0] x,y,ψ
     Δt = 1e-2
@@ -19,7 +20,6 @@ function neighbor_origin(T, steer_set, gear_set) #init at [0,0,0] x,y,ψ
             states_candi[:,(gear_idx-1)*num_steer+steer_idx] = states
         end
     end
-
     return states_candi, paths_candi
 end
 
