@@ -494,6 +494,7 @@ function allpath(states)
 end
 
 
+
 function plotActpaths(init_st, minR, cmds, costs)
     fea_idx = findall(costs.<Inf)
     h = plot()
