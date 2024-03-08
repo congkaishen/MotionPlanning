@@ -30,13 +30,19 @@ function vec2polar(vec)
 end
 
 function modπ(angle)
-    angle = mod(angle, 2*pi)
-    if angle < -pi
-        angle = angle + 2*pi
-    elseif angle >= pi
-        angle = angle - 2*pi
+    if angle >= -pi && angle <= pi
+        return angle
+
+    else
+        angle = mod(angle, 2*pi)
+        if angle < -pi
+            angle = angle + 2*pi
+        elseif angle > pi
+            angle = angle - 2*pi
+        end
+        return angle
     end
-    return angle
+    
 end
 
 function path1(states)
