@@ -180,9 +180,17 @@ function RS_connected(cur_st, goal_st, minR, block_list)
 end
 
 function rs_heuristic(cur_st, goal_st, minR)
+    
+    # Option 1
     norm_states = changeBasis(cur_st, goal_st, minR)
     _, opt_cost, _, _ = allpath(norm_states)
-    return opt_cost*minR
+    cost = opt_cost*minR
+
+    # Option 2
+    # cost = sqrt((cur_st[1]- goal_st[1])^2 + (cur_st[2]- goal_st[2])^2 + (cur_st[3]- goal_st[3])^2)
+    # cost = sqrt((cur_st[1]- goal_st[1])^2 + (cur_st[2]- goal_st[2])^2)
+
+    return cost
 end
 
 function dg_cost(path, block_list)
@@ -221,7 +229,7 @@ gear_set =  [1, -1]
 steer_set = collect(LinRange(-1/minR,1/minR,7))
 # steer_set = [-1/minR, 0, 1/minR]
 
-T = 1.25
+T = 1.0
 states_candi, paths_candi = neighbor_origin(T, steer_set, gear_set)
 
 
@@ -231,8 +239,8 @@ num_states = 3
 num_neighbors = Int32(num_steer*num_gear)
 
 
-xy_res = 0.5
-ψ_res = pi/18
+xy_res = 0.2
+ψ_res = pi/10
 st_bounds = [-15 15; -15 5; -pi pi]
 
 st_reso = [xy_res,xy_res,ψ_res]
@@ -243,7 +251,7 @@ st_bounds = [states_min states_max]
 
 
 ############# Define Storage ############# 
-maxNum = 30000
+maxNum = 20000
 # [states_coder, x, y, ψ] here only store states, the cost are stored in a heap for fast min search.
 # everytime create a new states, vertices will update one --> the handler of heap map is equal to row idx 
 # states_coder == 0 means vertices doesn't exist
@@ -256,9 +264,9 @@ edges = zeros(Int32(maxNum), Int32(1))
 # (flag, f, g), flag(visited or not -> be poped or not, 0 means not, 1 means poped, and can be 0 once reinserted) f = g+h, g is traversed cost, h is heuristic cost-to-go
 costs_heap = MutableBinaryMinHeap{Tuple{Float64, Float64, Float64}}() 
 ############# Define Storage ############# 
-init_st = [5,-5,pi/2]
-goal_st = [-5,-5,pi]
-block_list = [-1 -5 0 1 5; -10 -5 0 1.1 3; 5 0 0 2 1; 0 -10 0 10 2] #obs: ox, oy, oψ, l, w
+init_st = [10,-3,0]
+goal_st = [-5,-5,0]
+block_list = [0 -5 0 1 1.5; -10 -5 0 1.1 1.5; -5 -7 0 5 1] #obs: ox, oy, oψ, l, w
 
 
 init_st = regulate_states(init_st,st_reso)
@@ -267,7 +275,6 @@ goal_st = regulate_states(goal_st,st_reso)
 # A star Algorithm started
 # step 1. register initial states, and put in the open set (costs_heap)
 register_idx = 1
-
 cur_st = init_st
 st_index = encode_states(cur_st, st_bounds, st_reso)
 vertices[register_idx, 1] = st_index
@@ -282,14 +289,12 @@ end
 
 
 hplot = plot()
-# for asd in 1:10
 @time begin
 
 run_idx = 1
 while !isempty(costs_heap)
 
     global run_idx, block_list, vertices, edges, costs_heap, states_candi, paths_candi,  st_bounds, st_reso, T, num_neighbors, register_idx, hplot
-    
     cur_values, handler_cur_idx = top_with_handle(costs_heap)
     cur_st_index = vertices[handler_cur_idx, 1]
     cur_st = vertices[handler_cur_idx, 2:4]
@@ -310,10 +315,10 @@ while !isempty(costs_heap)
     neighbors_st = transform(cur_st, states_candi)
     neighbors_path = transform(cur_st, paths_candi)
     hplot = scatter!(hplot, neighbors_st[1,:], neighbors_st[2,:], legend = false, aspect_ratio = :equal)
-    
+
     for neighbor_idx in 1:num_neighbors
         # println(run_idx)
-        # run_idx = run_idx + 1
+        run_idx = run_idx + 1
         
         # expand to the neighbors
         nb_st = regulate_states(neighbors_st[:, neighbor_idx], st_reso)   # 3 x 1
@@ -362,23 +367,6 @@ while !isempty(costs_heap)
 end
 end
 
-# h = plot()
-# for i = 1:size(paths_candi,3)
-#     global h
-#     h = plot!(h, paths_candi[1,:,i], paths_candi[2,:,i], color =:red, legend = false)
-#     h = scatter!(h, [states_candi[1,i]], [states_candi[2,i]], color =:red, legend = false)
-#     arrowsize = 0.2
-#     h = quiver!(h, [states_candi[1,i]], [states_candi[2,i]], quiver = ([arrowsize*cos(states_candi[3,i])],[arrowsize*sin(states_candi[3,i])]) ,color =:red, legend = false)
-
-    
-#     states_reg = regulate_states(states_candi[:,i], [xy_res, xy_res, ψ_res])
-
-
-#     h = scatter!(h, [states_reg[1]], [states_reg[2]], color =:green, legend = false)
-#     arrowsize = 0.2
-#     h = quiver!(h, [states_reg[1]], [states_reg[2]], quiver = ([arrowsize*cos(states_reg[3])],[arrowsize*sin(states_reg[3])]) ,color =:green, legend = false, aspect_ratio =:equal)
-# end
-# display(h)
 
 h = plot()
 # plot the RS part

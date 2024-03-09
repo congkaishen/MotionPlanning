@@ -26,4 +26,4 @@ h2 = plotActpaths(init_st, minR, cmds, costs)
 
 println(init_st)
 println(termi_st)
-display(h2)
+display(h1)

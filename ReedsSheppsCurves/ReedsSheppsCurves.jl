@@ -409,22 +409,31 @@ function reverse(fcn, states)
 end
 
 function createPath(cmds)
-    states = [0.0, 0.0, 0.0]
-    path = states
+    states = [0, 0, 0]
     steps = 100
+    cmd_idx = 0
     for i in 1:size(cmds, 1)
         if cmds[i, 2] == 0
             break
         end
+        cmd_idx = cmd_idx + 1
+    end
+    path = zeros(3, cmd_idx*steps + 1)
+    path[:,1] = states
+
+    count = 2
+    for i in 1:cmd_idx
         Δt = abs(cmds[i,1])/steps
         for k = 1:steps
             ctrls = cmds[i, 2:3]
-            dstates = simCarModel(states, ctrls)            
+            dstates = simCarModel(states, ctrls)  
+            dstates[1:2] = dstates[1:2]        
             states = states + dstates*Δt
-            path = vcat(path, states)
+            path[:, count] = states
+            count = count + 1
         end
     end
-    return reshape(path, 3,:)
+    return path
 end
 
 
@@ -453,7 +462,7 @@ function createActPath(init_st, minR, cmds)
             count = count + 1
         end
     end
-    return path#reshape(path, 3,:)
+    return path
 end
 
 function allpath(states)
