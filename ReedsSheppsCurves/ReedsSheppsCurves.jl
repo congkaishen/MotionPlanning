@@ -430,22 +430,30 @@ end
 
 function createActPath(init_st, minR, cmds)
     states = vec(init_st)
-    path = states
     steps = 100
+    cmd_idx = 0
     for i in 1:size(cmds, 1)
         if cmds[i, 2] == 0
             break
         end
+        cmd_idx = cmd_idx + 1
+    end
+    path = zeros(3, cmd_idx*steps + 1)
+    path[:,1] = states
+
+    count = 2
+    for i in 1:cmd_idx
         Δt = abs(cmds[i,1])/steps
         for k = 1:steps
             ctrls = cmds[i, 2:3]
             dstates = simCarModel(states, ctrls)  
             dstates[1:2] = dstates[1:2]*minR          
             states = states + dstates*Δt
-            path = vcat(path, states)
+            path[:, count] = states
+            count = count + 1
         end
     end
-    return reshape(path, 3,:)
+    return path#reshape(path, 3,:)
 end
 
 function allpath(states)

@@ -284,9 +284,11 @@ end
 hplot = plot()
 # for asd in 1:10
 @time begin
+
+run_idx = 1
 while !isempty(costs_heap)
 
-    global block_list, vertices, edges, costs_heap, states_candi, paths_candi,  st_bounds, st_reso, T, num_neighbors, register_idx, hplot
+    global run_idx, block_list, vertices, edges, costs_heap, states_candi, paths_candi,  st_bounds, st_reso, T, num_neighbors, register_idx, hplot
     
     cur_values, handler_cur_idx = top_with_handle(costs_heap)
     cur_st_index = vertices[handler_cur_idx, 1]
@@ -310,6 +312,9 @@ while !isempty(costs_heap)
     hplot = scatter!(hplot, neighbors_st[1,:], neighbors_st[2,:], legend = false, aspect_ratio = :equal)
     
     for neighbor_idx in 1:num_neighbors
+        # println(run_idx)
+        # run_idx = run_idx + 1
+        
         # expand to the neighbors
         nb_st = regulate_states(neighbors_st[:, neighbor_idx], st_reso)   # 3 x 1
         nb_path = neighbors_path[:,:,neighbor_idx] # 3 x N [x;y;ψ]
@@ -323,6 +328,7 @@ while !isempty(costs_heap)
 
         ######### if the vertice has never been created, then:
         row_idx = gethandler(vertices[:,1], Int32(nb_st_index))
+                
         if row_idx == 0
             register_idx = register_idx + 1
             nb_g = cur_g + Δg
@@ -344,6 +350,7 @@ while !isempty(costs_heap)
             flag = ori_vals[1]
             
             ######### if the neigh can get lower cost bby choosing cur_st as parent, then:
+            
             if temp_g < ori_g
                 edges[row_idx, 1] = handler_cur_idx
                 nb_g = temp_g
