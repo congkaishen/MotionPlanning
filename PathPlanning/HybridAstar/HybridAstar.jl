@@ -340,7 +340,7 @@ while !isempty(costs_heap)
             nb_f = nb_g + rs_heuristic(nb_st, goal_st, minR)
 
             vertices[register_idx, 1] = nb_st_index
-            vertices[register_idx, 2:4] = nb_st 
+            vertices[register_idx, 2:4] = nb_st
             edges[register_idx, 1] = handler_cur_idx
 
             local handler = push!(costs_heap, (0.0, nb_f, nb_g))
