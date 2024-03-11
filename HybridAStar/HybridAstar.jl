@@ -153,9 +153,9 @@ function block_collision_check(path, block_list)
     block_width = block_list[:,5] .+ 0.5
     p = 4.0
 
-    if size(path, 2) > 25
-        x = path[1, 1:25:end]
-        y = path[2, 1:25:end]
+    if size(path, 2) > 15
+        x = path[1, 1:15:end]
+        y = path[2, 1:15:end]
     else
         x = path[1,1]
         y = path[2,1]
@@ -264,7 +264,7 @@ edges = zeros(Int32(maxNum), Int32(1))
 # (flag, f, g), flag(visited or not -> be poped or not, 0 means not, 1 means poped, and can be 0 once reinserted) f = g+h, g is traversed cost, h is heuristic cost-to-go
 costs_heap = MutableBinaryMinHeap{Tuple{Float64, Float64, Float64}}() 
 ############# Define Storage ############# 
-init_st = [10,-3,0]
+init_st = [10,-5,0]
 goal_st = [-5,-5,0]
 block_list = [0 -5 0 1 1.5; -10 -5 0 1.1 1.5; -5 -7 0 5 1] #obs: ox, oy, oψ, l, w
 
