@@ -169,59 +169,28 @@ function FindNewNode(astar::AstarSearcher, current_node::AstarNode)
             temp_f = temp_g + temp_h
 
             if haskey(astar.p.nodes_collection, neighbor_idx)
-                temp_node = deepcopy(astar.p.nodes_collection[ Encode(astar, new_position) ])
+                temp_node = astar.p.nodes_collection[ Encode(astar, new_position) ]
                 if temp_g<temp_node.g
+                    temp_node.g = temp_g
+                    temp_node.h = temp_h
+                    temp_node.f = temp_f
+                    temp_node.parent = cur_idx
                     need_update = true
                 else
                     need_update = false
                 end
             else
                 temp_node = AstarNode(cur_idx, new_position, temp_g, temp_h, temp_f)
-                temp_node.g = temp_g
-                temp_node.h = temp_h
-                temp_node.f = temp_f
-                temp_node.parent = cur_idx
                 astar.p.nodes_collection[neighbor_idx] = temp_node
                 need_update = true
             end
 
             if need_update
-                temp_node.g = temp_g
-                temp_node.h = temp_h
-                temp_node.f = temp_f
-                temp_node.parent = cur_idx
-                astar.p.nodes_collection[neighbor_idx] = temp_node
-
                 if !InOpen(astar, temp_node)
                      push!(astar.p.open_list, temp_node)
                 end
 
             end
-
-
-
-
-            # if InOpen(astar, temp_node)
-            #     if !need_update
-            #         continue
-            #     end
-            # elseif InClose(astar, temp_node)
-            #     if !need_update
-            #         continue
-            #     end
-            #
-            #     RemoveClose(astar, temp_node)
-            #     temp_node.f = temp_f
-            #     push!(astar.p.open_list, temp_node)
-            # else
-            #     temp_node.g = temp_g
-            #     temp_node.h = temp_h
-            #     temp_node.f = temp_f
-            #     temp_node.parent = cur_idx
-            #     astar.p.nodes_collection[neighbor_idx] = temp_node
-            # end
-
-
         end
 
     end

@@ -1,4 +1,4 @@
-include("../ReedsSheppsCurves/ReedsSheppsCurves.jl")
+include("../ReedsSheppsCurves/src/ReedsSheppsUtils.jl")
 using DataStructures
 using Plots
 
@@ -315,10 +315,10 @@ while !isempty(costs_heap)
     neighbors_st = transform(cur_st, states_candi)
     neighbors_path = transform(cur_st, paths_candi)
     hplot = scatter!(hplot, neighbors_st[1,:], neighbors_st[2,:], legend = false, aspect_ratio = :equal)
-
+    run_idx = run_idx + 1
     for neighbor_idx in 1:num_neighbors
         # println(run_idx)
-        run_idx = run_idx + 1
+        
         
         # expand to the neighbors
         nb_st = regulate_states(neighbors_st[:, neighbor_idx], st_reso)   # 3 x 1
