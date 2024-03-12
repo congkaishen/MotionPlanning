@@ -14,7 +14,6 @@ function defineMPPI(
     XU = fill(NaN,numStates),
     CL = fill(NaN,numControls),
     CU = fill(NaN,numControls),
-    MultiThreadBoolean = false
     )::MPPISearcher
     
     if numControls <= 0
@@ -56,10 +55,6 @@ function defineMPPI(
     MPPI.s.NominalControl = zeros(MPPI.s.N, MPPI.s.numControls)
     MPPI.s.Σ = Diagonal(ones(numControls)) * 0.1
     MPPI.s.MultivariantNormal = MvNormal(zeros(MPPI.s.numControls), MPPI.s.Σ)
-    MPPI.s.GridNum = GridNum
-    MPPI.s.GridSize = [(XU[1] - XL[1])/MPPI.s.GridNum[1],(XU[2] - XL[2])/MPPI.s.GridNum[2] ]
-    MPPI.s.MultiThreadBoolean = MultiThreadBoolean
-    defineMPPIGrid!(MPPI)
     return MPPI
 end
 
@@ -84,14 +79,3 @@ function defineMPPINominalControl!(MPPI::MPPISearcher, args...)
     return nothing
 end
 
-function defineMPPIGrid!(MPPI::MPPISearcher)
-    Xcords = MPPI.s.XL[1] : MPPI.s.GridSize[1] : MPPI.s.XU[1]
-    Ycords = MPPI.s.XL[2] : MPPI.s.GridSize[2] : MPPI.s.XU[2]
-    MPPI.s.XGrid = repeat(Xcords, 1, length(Ycords))
-    MPPI.s.YGrid = repeat(Ycords', length(Xcords), 1)
-    MPPI.s.TGrid = BitMatrix(zeros(size(MPPI.s.XGrid)))
-    MPPI.s.VGrid = BitMatrix(zeros(size(MPPI.s.XGrid)))
-    MPPI.s.OGrid = BitMatrix(ones(size(MPPI.s.XGrid)))
-    MPPI.s.TempGrid = BitMatrix(ones(size(MPPI.s.XGrid)))
-    return nothing
-end

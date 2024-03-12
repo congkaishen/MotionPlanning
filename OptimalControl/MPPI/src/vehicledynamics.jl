@@ -45,6 +45,6 @@ function VehicleDynamics(states, ctrl)
     dsa         = sr
     dstates     = [dx; dy; dv; dr; dpsi; du; dsa]
     constraint  = 0;
-    cost        = v^2 * 1 + 1 * r^2 + 5 * ax^2 + 3 * sr^2 + 2 * sa^2 + 2 * y^2;
+    cost        = v^2 * 1 + 1 * r^2 + 5 * ax^2 + 3 * sr^2 + 2 * sa^2 + 10 * y^2;
     return dstates, constraint, cost
 end
