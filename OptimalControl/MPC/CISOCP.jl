@@ -31,19 +31,19 @@ function defineSlamonOCP(problem_setting)
     user_options = (
     "mu_strategy" => "adaptive",
     "linear_solver" => "ma57",
-    # "max_iter" => 500,
-    # "tol" => 4e-2,
-    # "dual_inf_tol" => 2.,
-    # "constr_viol_tol" => 5e-1,
-    # "compl_inf_tol" => 5e-1,
-    # "acceptable_tol" => 1.5e-1,
-    # "acceptable_constr_viol_tol" => 0.02,
-    # "acceptable_dual_inf_tol" => 1e10,
-    # "acceptable_compl_inf_tol" => 0.02,
-    # "warm_start_init_point" => "yes",
+    "max_iter" => 500,
+    "tol" => 4e-2,
+    "dual_inf_tol" => 2.,
+    "constr_viol_tol" => 5e-1,
+    "compl_inf_tol" => 5e-1,
+    "acceptable_tol" => 1.5e-1,
+    "acceptable_constr_viol_tol" => 0.02,
+    "acceptable_dual_inf_tol" => 1e10,
+    "acceptable_compl_inf_tol" => 0.02,
+    "warm_start_init_point" => "yes",
     "fixed_variable_treatment" => "relax_bounds",
     "max_cpu_time" => 2.0,
-    "print_level" => 5,
+    "print_level" => 1,
     )
 
     # Create JuMP model, using Ipopt as the solver
@@ -81,12 +81,11 @@ function defineSlamonOCP(problem_setting)
     Δt = Δt_list
 
 
-    # states_s = [x_s, y_s, v_s, r_s, ψ_s, ux_s, sa_s, sr_s, ax_s]
-    # states_t = [goal_pt[1], goal_pt[2], v_s, r_s, ψ_s, ux_s, sa_s, sr_s, ax_s]
-    # interp_linear = Interpolations.LinearInterpolation([1, n], [states_s, states_t])
-
-    # initial_guess = mapreduce(transpose, vcat, interp_linear.(1:n))
-    # set_start_value.(all_variables(model), vec(initial_guess))
+    states_s = [x_s, y_s, v_s, r_s, ψ_s, ux_s, sa_s, sr_s, ax_s]
+    states_t = [goal_pt[1], goal_pt[2], v_s, r_s, ψ_s, ux_s, sa_s, sr_s, ax_s]
+    interp_linear = Interpolations.LinearInterpolation([1, n], [states_s, states_t])
+    initial_guess = mapreduce(transpose, vcat, interp_linear.(1:n))
+    set_start_value.(all_variables(model), vec(initial_guess))
 
     x = xst[:, 1]
     y = xst[:, 2]
@@ -95,7 +94,6 @@ function defineSlamonOCP(problem_setting)
     ψ = xst[:, 5]
     ux = xst[:, 6]
     sa = xst[:, 7]
-
     sr = u[:, 1]
     ax = u[:, 2]
 
@@ -120,20 +118,19 @@ function defineSlamonOCP(problem_setting)
     k_cost = @expression( model, sum((r[j]/ux[j])^2  for j=1:1:n))
     v_cost = @expression( model, sum((v[j])^2  for j=1:1:n))
     sr_cost = @expression( model, sum((sr[j])^2  for j=1:1:n))
-    y_cost = @expression( model, sum((y[j])^2  for j=1:1:n))
+    y_cost = @expression( model, sum( sqrt((y[j])^2+0.1)  for j=1:1:n))
     ax_cost = @expression( model, sum((ax[j])^2  for j=1:1:n))
     sa_cost = @expression( model, sum((sa[j])^2  for j=1:1:n))
 
 
     obj_goal = @expression(model, ((x[end] - goal_pt[1])^2 + (y[end] - goal_pt[2])^2)/( (x[end] - x[1])^2 + (y[end] - y[1])^2  + 0.1 )  ) # 1 is added in the dominator to avoid singurality
 
-    @objective(model, Min, 150*obj_goal + 2*y_cost + 0.2*ax_cost + 1.5*sr_cost + 0.001*k_cost + 0.005*v_cost)
+    @objective(model, Min, 150*obj_goal + 5*y_cost + 0.1*ax_cost + 1.5*sr_cost + 0.1*k_cost + 0.05*v_cost + 1*sa_cost)
     set_silent(model)  # Hide solver's verbose output
     return model
 end
 
 function getInterpolatedCtrls(model, problem_setting, current_sim_time)
-    # optStates = value.(model[:xst])
     optCtrls = value.(model[:u])
     Horizon = problem_setting["Horizon"]
     n = problem_setting["n"]
@@ -143,41 +140,93 @@ function getInterpolatedCtrls(model, problem_setting, current_sim_time)
     return InterpolateSr, InterpolateAx
 end
 
-
-# define goal position, block position, prediction horizon, number of collocation, and initial states
-# the block is treated as circle: [center_x center_y radius; ...]
-problem_setting = Dict("goal_pt"=>[30, 0],
-                        "block_list"=> [8 -1 2.5], 
-                        "Horizon" => 6,
-                        "n" => 30,
-                        "X0"=> [0.0, 0.0, 0.0, 0.0, 0.0, 5.0, 0.0])
-
-# Here we only provide backward euler propogationm, which means the interpolation is constant next
-model = defineSlamonOCP(problem_setting)
+function setWarmStart(model, warm_states, warm_ctrls, X0, C0)
+    # warm_states = value.(model[:xst])
+    # warm_ctrls = value.(model[:u])
+    warm_states[1,:] = X0
+    warm_ctrls[1,:] = C0
+    set_start_value.(model[:xst], warm_states)
+    set_start_value.(model[:u], warm_ctrls)
+end
 
 
 
+function distance(pt1, pt2)
+    return norm(pt1 - pt2)
+end
 
 
-optimize!(model)  # Solve for the control and state
-
-
-
-
-
+function updateX0(model, cur_state, cur_ctrl)
+    fix.(model[:xst][1,:], cur_state; force = true)
+    fix.(model[:u][1,:], cur_ctrl; force = true)
+end
 
 
 using Plots
 plot()
+# in this example, we assume that prediction and plant are the same model
+t_sim = 0.0
+Δt_sim = 1e-3
+max_sim_time = 10.0
+exec_horizon = 0.2
 
 
+cur_states = [0.0, 0.0, 0.0, 0.0, 0.0, 5.0, 0.0]
+goal_pt = [100.0, 0.0]
+block_list = [40 -1 2.5; 70 1 2.5]
+# define goal position, block position, prediction horizon, number of collocation, and initial states
+# the block is treated as circle: [center_x center_y radius; ...]
+problem_setting = Dict("goal_pt"=>goal_pt,
+                        "block_list"=> block_list, 
+                        "Horizon" => 3,
+                        "n" => 30,
+                        "X0"=> cur_states)
+
+# Here we only provide backward euler propogationm, which means the interpolation is constant next
+model = defineSlamonOCP(problem_setting)
+optimize!(model)  # Here we solve it just for warm start
+
+updateX0(model, [1.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0], [0.0, 0.0])
+states_symbol = model[:xst]
+ctrls_symbol = model[:u]
 
 
-plot(optStates[:,1], optStates[:,2], aspect_ratio =:equal)
-sr_act, ax_act = getInterpolatedCtrls(model, problem_setting, 0)
+optimize!(model)  
+optStates = value.(model[:xst])
+optCtrls = value.(model[:u])
+plot(optStates[:,1], optStates[:,2])
+
+sr_act, ax_act = getInterpolatedCtrls(model, problem_setting, t_sim)
 
 
-# plot(states[:,1], optCtrls[:,2])
+states_his = cur_states
+
+
+for i in 1:Int32(floor(max_sim_time/Δt_sim))
+    global max_sim_time, t_sim, Δt_sim, cur_states, model, goal_pt, sr_act, ax_act, states_his, optStates, optCtrls, states_symbol, ctrls_symbol
+    if distance(cur_states[1:2], goal_pt) <= 3.6
+        break
+    end
+    if mod(i, Int32(exec_horizon/Δt_sim)) == 1
+        ctrls = [sr_act(t_sim), ax_act(t_sim)]
+        updateX0(model, cur_states, ctrls) 
+        setWarmStart(model, optStates, optCtrls, cur_states, ctrls)
+        optimize!(model) 
+        optStates = value.(model[:xst])
+        optCtrls = value.(model[:u])
+        sr_act, ax_act = getInterpolatedCtrls(model, problem_setting, t_sim)
+        h = plot(states_his[1,:], states_his[2,:], color =:black, aspect_ratio =:equal)
+        h = plot!(h, optStates[:,1],optStates[:,2], color =:red)
+        display(h)
+        sleep(0.01)
+    end
+    ctrls = [sr_act(t_sim), ax_act(t_sim)]
+    δstates = dynamics(cur_states, ctrls)
+    cur_states = cur_states .+ vec(δstates).*Δt_sim
+    states_his = [states_his cur_states]
+    t_sim = t_sim + Δt_sim
+end
+
 
 
 
