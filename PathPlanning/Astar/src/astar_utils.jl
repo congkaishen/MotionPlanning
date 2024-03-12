@@ -13,10 +13,7 @@ function plotRes(astar)
 	h = plot(size = [1000, 600])
 
     if size(astar.r.actualpath, 1) > 2
-        # for node_idx in 1:length(astar.p.nodes_collection)
-        #     println((astar.p.nodes_collection[node_idx].position))
-        #     h = plot!(h, circleShape((astar.p.nodes_collection[node_idx].position)[1], (astar.p.nodes_collection[node_idx].position)[2], 0.25), seriestype = [:shape,], ;w = 0.5, c=:gray, legend = false, fillalpha = 0.2)
-        # end
+
 
         for (key, node) in astar.p.nodes_collection
 
@@ -86,6 +83,7 @@ function planAstar!(astar::AstarSearcher)
             display(h)
             sleep(0.001)
         end
+
 
 
         if current_node.position == astar.s.ending_pos
@@ -171,8 +169,8 @@ end
 
 function FindNewNode(astar::AstarSearcher, current_node::AstarNode)
     cur_idx = Encode(astar, current_node.position)
-    # directions = [(-1,0),(-1,-1), (-1,-1), (1,-1), (1,0),(1,1), (0,-1), (1,-1), (0,1)]
-    directions = [(-1,0),(1,0),(0,-1), (0,1)]
+    directions = [(-1,0),(-1,-1), (-1,-1), (1,-1), (1,0),(1,1), (0,-1), (1,-1), (0,1)]
+    # directions = [(-1,0),(1,0),(0,-1), (0,1)]
     for direction in directions
         new_position = [ Int64(current_node.position[1] + direction[1]), Int64(current_node.position[2] + direction[2])]
 

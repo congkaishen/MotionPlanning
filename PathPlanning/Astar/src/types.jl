@@ -8,7 +8,7 @@
     f::Float64 = 0
 end
 
-Base.isless(a::AstarNode, b::AstarNode) = isless(a.g, b.g)
+Base.isless(a::AstarNode, b::AstarNode) = isless(a.f, b.f)
 
 @with_kw mutable struct AstarSettings
     actualbound::Vector{Float64} = Vector{Float64}[]
