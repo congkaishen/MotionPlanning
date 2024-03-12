@@ -384,7 +384,6 @@ for i in 1:1:size(x_coords,1)
 end
 h = heatmap(x_coords, y_coords, block_grid, c=:greys, legend = false, colorbar=false)
 
-
 h = plot!(h, final_path[1,:], final_path[2,:], aspect_ratio =:equal)
 # plot hybrid A star part
 handler = final_handler
