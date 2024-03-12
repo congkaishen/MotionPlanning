@@ -34,123 +34,137 @@ function plotEnv(rrt::RRTSearcher)
     return current()
 end
 
-# function RRTplot(tpp::TPPSearcher)
-#     rrt = tpp.rrt
-#     h = plotEnv(rrt)
-#     h = plotTree(h, rrt)
+function circleShape(h,k,r)
+    θ = LinRange(0, 2*π, 500)
+    h.+r*sin.(θ), k.+r*cos.(θ)
+end
 
-#     if rrt.r.status == :Solved
-#         println("Solved")
-#         plot!(h, rrt.r.Path[1,:], rrt.r.Path[2,:],
-#         color=:blue,
-#         lw = 2.
-#         )
-#         savefig("Results\\rrt_result.png")
+function plotRes(rrt::RRTSearcher)
+    obs_setting = rrt.s.obstacle_list
+    h = plot(size = [1000, 600])
+    for obs_idx = 1:1:size(obs_setting, 1)
+        h = plot!(h, circleShape(obs_setting[obs_idx][1], obs_setting[obs_idx][2], obs_setting[obs_idx][3]), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 1.0)
+    end
+    h = plot!(h, circleShape(rrt.s.ending_position[1], rrt.s.ending_position[2], 3), seriestype = [:shape,], ;w = 0.5, c=:green, linecolor = :green, legend = false, fillalpha = 1.0)
+    h = plot!(rrt.r.Path[1,:], rrt.r.Path[2,:], aspect_ratio=:equal, lc=:blue)
+end
+function RRTplot(tpp::TPPSearcher)
+    rrt = tpp.rrt
+    h = plotEnv(rrt)
+    h = plotTree(h, rrt)
 
-#         xpath = rrt.p.states_collection[1,  rrt.r.resultIdxs]
-#         ypath = rrt.p.states_collection[2,  rrt.r.resultIdxs]
-#         zpath = rrt.p.states_collection[3,  rrt.r.resultIdxs]
-#         upath = rrt.p.states_collection[5,  rrt.r.resultIdxs]
+    if rrt.r.status == :Solved
+        println("Solved")
+        plot!(h, rrt.r.Path[1,:], rrt.r.Path[2,:],
+        color=:blue,
+        lw = 2.
+        )
+        savefig("Results\\rrt_result.png")
 
-#         xpath = reverse(xpath)
-#         ypath = reverse(ypath)
-#         zpath = reverse(zpath)
-#         upath = reverse(upath)
-#         dis_path = sqrt.( (xpath[2:end]-xpath[1:end-1]).^2+(ypath[2:end]-ypath[1:end-1]).^2 + (zpath[2:end]-zpath[1:end-1]).^2)
-#         uavg_path = (upath[2:end]+upath[1:end-1])/2
-#         udif_path = (upath[2:end]-upath[1:end-1])
-#         dt_path =  dis_path./uavg_path
-#         acc_path = udif_path./dt_path
+        xpath = rrt.p.states_collection[1,  rrt.r.resultIdxs]
+        ypath = rrt.p.states_collection[2,  rrt.r.resultIdxs]
+        zpath = rrt.p.states_collection[3,  rrt.r.resultIdxs]
+        upath = rrt.p.states_collection[5,  rrt.r.resultIdxs]
 
-#         n = size(xpath, 1)
-#         ################# ACC #######################
-#         max_acc_list = Vector{Float64}()
-#         min_acc_list = Vector{Float64}()
+        xpath = reverse(xpath)
+        ypath = reverse(ypath)
+        zpath = reverse(zpath)
+        upath = reverse(upath)
+        dis_path = sqrt.( (xpath[2:end]-xpath[1:end-1]).^2+(ypath[2:end]-ypath[1:end-1]).^2 + (zpath[2:end]-zpath[1:end-1]).^2)
+        uavg_path = (upath[2:end]+upath[1:end-1])/2
+        udif_path = (upath[2:end]-upath[1:end-1])
+        dt_path =  dis_path./uavg_path
+        acc_path = udif_path./dt_path
 
-#         max_acc_torque_list = Vector{Float64}()
-#         min_acc_torque_list = Vector{Float64}()
+        n = size(xpath, 1)
+        ################# ACC #######################
+        max_acc_list = Vector{Float64}()
+        min_acc_list = Vector{Float64}()
 
-#         max_acc_fric_list = Vector{Float64}()
-#         min_acc_fric_list = Vector{Float64}()
+        max_acc_torque_list = Vector{Float64}()
+        min_acc_torque_list = Vector{Float64}()
 
-
-#         tol_dist = 0
-#         tol_dists = deepcopy(dis_path)
-
-#         for i in 1:n-1
-#             tol_dists[i] = tol_dist
-#             tol_dist = tol_dist + dis_path[i]
-#             h1 = [xpath[i+1]; ypath[i+1]; zpath[i+1]]- [xpath[i]; ypath[i]; zpath[i]]
-#             h1 = h1/norm(h1)
-
-#             R1 = euler2Rot(rrt.p.nodes_collection[rrt.r.resultIdxs[n-i+1]].eulerang)
-#             R2 = euler2Rot(rrt.p.nodes_collection[rrt.r.resultIdxs[n-i]].eulerang)
-
-#             n1 = R1[:,3]
-#             n2 = R2[:,3]
-#             n_temp = n1+n2
-#             n_temp = n_temp/norm(n_temp)
+        max_acc_fric_list = Vector{Float64}()
+        min_acc_fric_list = Vector{Float64}()
 
 
-#             init_h = R1[:,1]
-#             verti_ang_vec = cross(cross(init_h,  h1), init_h)
-#             verti_ang = acos( round(dot(init_h,  h1)/(norm(init_h)*norm(h1)), digits = 2  ) )*sign(verti_ang_vec[3])
+        tol_dist = 0
+        tol_dists = deepcopy(dis_path)
 
-#             lat_vec = cross(n_temp, h1)
-#             lat_vec = lat_vec/norm(lat_vec)
-#             normal_vec = cross(h1, lat_vec)
-#             normal_vec = normal_vec/norm(normal_vec)
+        for i in 1:n-1
+            tol_dists[i] = tol_dist
+            tol_dist = tol_dist + dis_path[i]
+            h1 = [xpath[i+1]; ypath[i+1]; zpath[i+1]]- [xpath[i]; ypath[i]; zpath[i]]
+            h1 = h1/norm(h1)
 
-#             centrifugal = -(upath[i]^2/dis_path[i])*getChildYaw(rrt.p.nodes_collection[rrt.r.resultIdxs[n-i+1]], rrt.p.nodes_collection[rrt.r.resultIdxs[n-i]])
-#             y_friction = -lat_vec[3]*g + centrifugal
-#             tol_friction = mu_f* (abs(normal_vec[3]*g) +  (upath[i]^2/dis_path[i])*verti_ang )
+            R1 = euler2Rot(rrt.p.nodes_collection[rrt.r.resultIdxs[n-i+1]].eulerang)
+            R2 = euler2Rot(rrt.p.nodes_collection[rrt.r.resultIdxs[n-i]].eulerang)
 
-
-#             x_frinction = sqrt(tol_friction^2-y_friction^2)
-#             x_acc = min(x_frinction, torque_acc)
-
-#             max_acc = x_acc  -1* h1[3]*g
-#             min_acc = -x_acc  -1* h1[3]*g
-
-#             max_acc_torque = torque_acc  -1* h1[3]*g
-#             min_acc_torque = -torque_acc  -1* h1[3]*g
-
-#             max_acc_fric = x_frinction  -1* h1[3]*g
-#             min_acc_fric = -x_frinction  -1* h1[3]*g
-
-#             max_acc_list = [max_acc_list; max_acc]
-#             min_acc_list = [min_acc_list; min_acc]
-#             max_acc_torque_list = [max_acc_torque_list; max_acc_torque]
-#             min_acc_torque_list = [min_acc_torque_list; min_acc_torque]
-#             max_acc_fric_list = [max_acc_fric_list; max_acc_fric]
-#             min_acc_fric_list = [min_acc_fric_list; min_acc_fric]
-#         end
-
-#         h = plot()
-#         plot(tol_dists,acc_path, lw = 5, labels="rrt's acc", xlabel = "travel distance[m]", ylabel = "acc [m/s^2]", title = string("Acc Plot"))
-
-#         plot!(tol_dists,max_acc_list, ls =:solid,color=:red, labels="max acc", xlabel = "travel distance[m]", ylabel = "acc [m/s^2]", title = string("Acc Plot"))
-#         plot!(tol_dists,min_acc_list, ls =:solid,color=:green, labels="min acc", xlabel = "travel distance[m]", ylabel = "acc [m/s^2]", title = string("Acc Plot"))
-
-#         plot!(tol_dists,max_acc_torque_list, lw = 3, ls =:dash, color=:red, labels="max torque + gravity", xlabel = "travel distance[m]", ylabel = "acc [m/s^2]", title = string("Acc Plot"))
-#         plot!(tol_dists,min_acc_torque_list, lw = 3, ls =:dash,color=:green, labels="min torque + gravity", xlabel = "travel distance[m]", ylabel = "acc [m/s^2]", title = string("Acc Plot"))
-#         plot!(tol_dists,max_acc_fric_list, lw = 3, ls =:dot,color=:red, labels="max fric + gravity", xlabel = "travel distance[m]", ylabel = "acc [m/s^2]", title = string("Acc Plot"))
-#         plot!(tol_dists,min_acc_fric_list, lw = 3, ls =:dot,color=:green, legend=:outertopright, labels="min fric + gravity", xlabel = "travel distance[m]", ylabel = "acc [m/s^2]", title = string("Acc Plot"))
-#         savefig("Results\\rrt_acc.png")
+            n1 = R1[:,3]
+            n2 = R2[:,3]
+            n_temp = n1+n2
+            n_temp = n_temp/norm(n_temp)
 
 
+            init_h = R1[:,1]
+            verti_ang_vec = cross(cross(init_h,  h1), init_h)
+            verti_ang = acos( round(dot(init_h,  h1)/(norm(init_h)*norm(h1)), digits = 2  ) )*sign(verti_ang_vec[3])
 
-#         h = plot()
-#         plot!(tol_dists, upath[1:end-1], legend = false, color = :blue, lw = 2, xlabel = "travel distance[m]", ylabel = "longitudinal speed [m/s]", title = string("Speed Plot"))
-#         savefig("Results\\rrt_speed.png")
-#     else
-#         println("Not Solved")
-#         h
-#         savefig("Results\\rrt_tree.png")
-#     end
+            lat_vec = cross(n_temp, h1)
+            lat_vec = lat_vec/norm(lat_vec)
+            normal_vec = cross(h1, lat_vec)
+            normal_vec = normal_vec/norm(normal_vec)
 
-#     return h
-# end
+            centrifugal = -(upath[i]^2/dis_path[i])*getChildYaw(rrt.p.nodes_collection[rrt.r.resultIdxs[n-i+1]], rrt.p.nodes_collection[rrt.r.resultIdxs[n-i]])
+            y_friction = -lat_vec[3]*g + centrifugal
+            tol_friction = mu_f* (abs(normal_vec[3]*g) +  (upath[i]^2/dis_path[i])*verti_ang )
+
+
+            x_frinction = sqrt(tol_friction^2-y_friction^2)
+            x_acc = min(x_frinction, torque_acc)
+
+            max_acc = x_acc  -1* h1[3]*g
+            min_acc = -x_acc  -1* h1[3]*g
+
+            max_acc_torque = torque_acc  -1* h1[3]*g
+            min_acc_torque = -torque_acc  -1* h1[3]*g
+
+            max_acc_fric = x_frinction  -1* h1[3]*g
+            min_acc_fric = -x_frinction  -1* h1[3]*g
+
+            max_acc_list = [max_acc_list; max_acc]
+            min_acc_list = [min_acc_list; min_acc]
+            max_acc_torque_list = [max_acc_torque_list; max_acc_torque]
+            min_acc_torque_list = [min_acc_torque_list; min_acc_torque]
+            max_acc_fric_list = [max_acc_fric_list; max_acc_fric]
+            min_acc_fric_list = [min_acc_fric_list; min_acc_fric]
+        end
+
+        h = plot()
+        plot(tol_dists,acc_path, lw = 5, labels="rrt's acc", xlabel = "travel distance[m]", ylabel = "acc [m/s^2]", title = string("Acc Plot"))
+
+        plot!(tol_dists,max_acc_list, ls =:solid,color=:red, labels="max acc", xlabel = "travel distance[m]", ylabel = "acc [m/s^2]", title = string("Acc Plot"))
+        plot!(tol_dists,min_acc_list, ls =:solid,color=:green, labels="min acc", xlabel = "travel distance[m]", ylabel = "acc [m/s^2]", title = string("Acc Plot"))
+
+        plot!(tol_dists,max_acc_torque_list, lw = 3, ls =:dash, color=:red, labels="max torque + gravity", xlabel = "travel distance[m]", ylabel = "acc [m/s^2]", title = string("Acc Plot"))
+        plot!(tol_dists,min_acc_torque_list, lw = 3, ls =:dash,color=:green, labels="min torque + gravity", xlabel = "travel distance[m]", ylabel = "acc [m/s^2]", title = string("Acc Plot"))
+        plot!(tol_dists,max_acc_fric_list, lw = 3, ls =:dot,color=:red, labels="max fric + gravity", xlabel = "travel distance[m]", ylabel = "acc [m/s^2]", title = string("Acc Plot"))
+        plot!(tol_dists,min_acc_fric_list, lw = 3, ls =:dot,color=:green, legend=:outertopright, labels="min fric + gravity", xlabel = "travel distance[m]", ylabel = "acc [m/s^2]", title = string("Acc Plot"))
+        savefig("Results\\rrt_acc.png")
+
+
+
+        h = plot()
+        plot!(tol_dists, upath[1:end-1], legend = false, color = :blue, lw = 2, xlabel = "travel distance[m]", ylabel = "longitudinal speed [m/s]", title = string("Speed Plot"))
+        savefig("Results\\rrt_speed.png")
+    else
+        println("Not Solved")
+        h
+        savefig("Results\\rrt_tree.png")
+    end
+
+    return h
+end
 
 function TPPplot(tpp::TPPSearcher)
     rrt = tpp.rrt
