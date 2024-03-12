@@ -27,7 +27,7 @@ block_list = [50.0 1 2.5; 70.0 -1 2.5; 90.0 1 2.5]
 problem_setting = Dict("goal_pt"=>goal_pt,
                         "block_list"=> block_list, 
                         "Horizon" => 3,
-                        "n" => 30,
+                        "n" => 20,
                         "X0"=> cur_states)
 # Here we only provide backward euler propogationm, which means the interpolation is constant next
 model = defineSlamonOCP(problem_setting)
@@ -62,6 +62,8 @@ for i in 1:Int32(floor(max_sim_time/Δt_sim))
         updateX0(model, cur_states, ctrls) 
         setWarmStart(model, optStates, optCtrls, cur_states, ctrls)
         optimize!(model) 
+
+        println("Current time: ", round(t_sim; digits = 1), "  Status: ", RetrieveSolveStatus(termination_status(model))," (",round(1000 * solve_time(model); digits = 1)," ms)")
         optStates = value.(model[:xst])
         optCtrls = value.(model[:u])
         sr_act, ax_act = getInterpolatedCtrls(model, problem_setting, t_sim)

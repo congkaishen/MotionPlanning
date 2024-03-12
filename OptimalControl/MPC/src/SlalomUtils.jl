@@ -151,6 +151,20 @@ function updateX0(model, cur_state, cur_ctrl)
     fix.(model[:u][1,:], cur_ctrl; force = true)
 end
 
+function RetrieveSolveStatus(status::MOI.TerminationStatusCode)
+    SolvingStatus = [:Optimal, :UserLimit, :InFeasible]
+    OptimalList = [MOI.OPTIMAL, MOI.LOCALLY_SOLVED, MOI.ALMOST_OPTIMAL]
+    LimitList = [MOI.ITERATION_LIMIT, MOI.TIME_LIMIT, MOI.NODE_LIMIT, MOI.SOLUTION_LIMIT, MOI.MEMORY_LIMIT, MOI.OBJECTIVE_LIMIT, MOI.NORM_LIMIT, MOI.OTHER_LIMIT ]
+    
+    if status ∈ OptimalList
+        return SolvingStatus[1]
+    elseif status ∈ LimitList
+        return SolvingStatus[2]
+    else
+        return SolvingStatus[3]
+    end
+end
+
 function circleShape(h,k,r)
     θ = LinRange(0, 2*π, 500)
     h.+r*sin.(θ), k.+r*cos.(θ)
