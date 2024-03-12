@@ -20,6 +20,7 @@ Base.isless(a::AstarNode, b::AstarNode) = isless(a.g, b.g)
     obstacle_list::Vector{Vector{Float64}} = Vector{Vector{Float64}}[]
     x_factor::Float64 = 0.0
     y_factor::Float64 = 0.0
+    draw_fig::Bool = false
 end
 
 @with_kw mutable struct AstarPlanner

@@ -1,3 +1,76 @@
+function circleShape(h,k,r)
+    θ = LinRange(0, 2*π, 500)
+    h.+r*sin.(θ), k.+r*cos.(θ)
+end
+
+
+function plotRes(astar)
+
+
+	goal_pt = astar.s.ending_pos
+    obs_setting = astar.s.obstacle_list
+
+	h = plot(size = [1000, 600])
+
+    if size(astar.r.actualpath, 1) > 2
+        # for node_idx in 1:length(astar.p.nodes_collection)
+        #     println((astar.p.nodes_collection[node_idx].position))
+        #     h = plot!(h, circleShape((astar.p.nodes_collection[node_idx].position)[1], (astar.p.nodes_collection[node_idx].position)[2], 0.25), seriestype = [:shape,], ;w = 0.5, c=:gray, legend = false, fillalpha = 0.2)
+        # end
+
+        for (key, node) in astar.p.nodes_collection
+
+            act_pos = TransferCoordinate(astar, node.position)
+
+            h = scatter!(h, [act_pos[1]], [act_pos[2]], c=:gray, fillalpha = 0.2)
+            # h = plot!(h, circleShape(act_pos[1], act_pos[2], 0.25), seriestype = [:shape,], ;w = 0.5, c=:gray, legend = false, fillalpha = 0.2)
+        end
+
+        h = plot!(h, astar.r.actualpath[:,1], astar.r.actualpath[:,2],aspect_ratio=:equal, lc=:red, legend=false)
+    end
+
+    for obs_idx = 1:1:size(obs_setting, 1)
+        h = plot!(h, circleShape(obs_setting[obs_idx][1], obs_setting[obs_idx][2], obs_setting[obs_idx][3]), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 1.0)
+    end
+	h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 0.25), seriestype = [:shape,], ;w = 0.5, c=:green, linecolor = :green, legend = false, fillalpha = 1.0)
+
+    
+
+    return h
+
+end
+
+
+
+function retrievepath(astar::AstarSearcher, ori_current_node::AstarNode) 
+    astarpath = ori_current_node.position
+    if ori_current_node.parent == nothing
+        astar.r.actualpath = TransferCoordinate(astar, ori_current_node.position)
+        return nothing
+    end
+
+    current_node = astar.p.nodes_collection[ori_current_node.parent]
+
+    while current_node != nothing
+        astarpath = [astarpath current_node.position]
+        if current_node.parent == nothing
+            current_node = nothing
+        else
+            current_node = astar.p.nodes_collection[current_node.parent]
+        end
+    end
+    
+    astarpath = [reverse!(astarpath[1, :]) reverse!(astarpath[2, :])]
+    astar.r.astarpath = astarpath
+    actualpath = deepcopy(astarpath)
+    actualpath = convert(Matrix{Float64}, actualpath)
+    for i = 1:size(actualpath, 1)
+        position_val = actualpath[i, :]
+        actualpath[i,:] = TransferCoordinate(astar, position_val)
+    end
+    astar.r.actualpath  = actualpath
+end
+
 function planAstar!(astar::AstarSearcher)
     t1 = time()
     push!(astar.p.open_list, astar.p.starting_node)
@@ -5,6 +78,15 @@ function planAstar!(astar::AstarSearcher)
         astar.p.loop_count = astar.p.loop_count + 1
         sort!(astar.p.open_list)
         current_node = popfirst!(astar.p.open_list)
+
+        if astar.s.draw_fig == true && mod(astar.p.loop_count, 100)==1
+            retrievepath(astar, current_node) 
+            # println(size(astar.r.actualpath))
+            h = plotRes(astar)
+            display(h)
+            sleep(0.001)
+        end
+
 
         if current_node.position == astar.s.ending_pos
             astarpath = astar.s.ending_pos
@@ -89,8 +171,8 @@ end
 
 function FindNewNode(astar::AstarSearcher, current_node::AstarNode)
     cur_idx = Encode(astar, current_node.position)
-    directions = [(-1,0),(-1,-1), (-1,-1), (1,-1), (1,0),(1,1), (0,-1), (1,-1), (0,1)]
-    # directions = [(-1,0),(1,0),(0,-1), (0,1)]
+    # directions = [(-1,0),(-1,-1), (-1,-1), (1,-1), (1,0),(1,1), (0,-1), (1,-1), (0,1)]
+    directions = [(-1,0),(1,0),(0,-1), (0,1)]
     for direction in directions
         new_position = [ Int64(current_node.position[1] + direction[1]), Int64(current_node.position[2] + direction[2])]
 
