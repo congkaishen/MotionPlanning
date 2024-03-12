@@ -8,11 +8,11 @@ include("src/types.jl")
 include("src/setup.jl")
 include("src/astar_utils.jl")
 
-starting_pose = [0.0; 0.0; 0.0]
-starting_ang = [0.0; 0.0; 0]
+starting_pose = [0.0; 0.0]
+starting_ang = [0.0; 0.0]
 starting_ux = 2.0
-ending_pose = [100.0; 50.0; 0.0]
-ending_ang = [0.0; 0.0; 0.0]
+ending_pose = [100.0; 50.0]
+ending_ang = [0.0; 0.0]
 ending_ux = 2.0
 buffer_size = 100
 BoundPosition = [0; 100; 0; 100]

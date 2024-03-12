@@ -1,4 +1,3 @@
-
 ################################################################################## Astar Setup ##########################################################################################
 
 function defineAstar(
@@ -16,7 +15,7 @@ function defineAstar(
     astar.s.y_factor = (astar.s.actualbound[4] - astar.s.actualbound[3])/(astar.s.mapbound[2] - 1)
     astar.s.starting_pos = [Int(floor((astar.s.starting_real[1] - astar.s.actualbound[1])/astar.s.x_factor + 1)), Int(floor((astar.s.starting_real[2] - astar.s.actualbound[3])/astar.s.y_factor + 1))]
     astar.s.ending_pos = [Int(floor((astar.s.ending_real[1] - astar.s.actualbound[1])/astar.s.x_factor + 1)), Int(floor((astar.s.ending_real[2] - astar.s.actualbound[3])/astar.s.y_factor + 1))]
-    astar.p.starting_node = AstarNode(nothing, astar.s.starting_pos, 0.0, 0, 0, 0)
+    astar.p.starting_node = AstarNode(nothing, astar.s.starting_pos, 0, 0, 0)
 
     astar.p.nodes_collection[Encode(astar, astar.s.starting_pos)] = astar.p.starting_node
     return astar

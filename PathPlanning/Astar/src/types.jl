@@ -3,7 +3,6 @@
 @with_kw mutable struct AstarNode
     parent::Union{Int, Nothing}= nothing
     position::Vector{Int64} = Vector{Int64}[]
-    height::Float64 = 0.0
     g::Float64 = 0
     h::Float64 = 0
     f::Float64 = 0

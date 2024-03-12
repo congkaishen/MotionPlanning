@@ -93,8 +93,6 @@ function FindNewNode(astar::AstarSearcher, current_node::AstarNode)
     # directions = [(-1,0),(1,0),(0,-1), (0,1)]
     for direction in directions
         new_position = [ Int64(current_node.position[1] + direction[1]), Int64(current_node.position[2] + direction[2])]
-        height = 0.0
-
 
         neighbor_idx = Encode(astar, new_position)
         need_update = false
@@ -115,7 +113,7 @@ function FindNewNode(astar::AstarSearcher, current_node::AstarNode)
                     need_update = false
                 end
             else
-                temp_node = AstarNode(cur_idx, new_position, height, temp_g, temp_h, temp_f)
+                temp_node = AstarNode(cur_idx, new_position, temp_g, temp_h, temp_f)
                 temp_node.g = temp_g
                 temp_node.h = temp_h
                 temp_node.f = temp_f
