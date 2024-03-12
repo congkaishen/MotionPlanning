@@ -1,4 +1,3 @@
-# one way to tackle initial guess: https://jso-docs.github.io/solve-pdenlpmodels-with-jsosolvers/
 
 using JuMP
 using MAT
@@ -8,9 +7,6 @@ import HSL_jll
 using LinearAlgebra
 using Statistics
 include("VehicleModel.jl")
-
-
-
 
 function defineSlamonOCP(problem_setting)
     ########################   Preparing the Map Data ######################## 
@@ -113,8 +109,6 @@ function defineSlamonOCP(problem_setting)
     smy = 1.0
     # obs_softconstraint = @expression(model, sum((tanh(-1.4*((x[i] - block_list[j, 1])^2/(block_list[j,3] + smx)^2 +(y[i] - block_list[j, 2])^2/(block_list[j,3] + smy)^2)) + 1)/2 for i=1:n for j=1:size(block_list, 1) ))
     obs_hardconstraint = @constraint(model, [i=1:n, j=1:size(block_list, 1)],1<=((x[i]-block_list[j,1])^2)/((block_list[j,3]+smx)^2)+((y[i]-block_list[j,2])^2)/((block_list[j,3]+smy)^2))
-
-
     k_cost = @expression( model, sum((r[j]/ux[j])^2  for j=1:1:n))
     v_cost = @expression( model, sum((v[j])^2  for j=1:1:n))
     sr_cost = @expression( model, sum((sr[j])^2  for j=1:1:n))
@@ -141,92 +135,17 @@ function getInterpolatedCtrls(model, problem_setting, current_sim_time)
 end
 
 function setWarmStart(model, warm_states, warm_ctrls, X0, C0)
-    # warm_states = value.(model[:xst])
-    # warm_ctrls = value.(model[:u])
     warm_states[1,:] = X0
     warm_ctrls[1,:] = C0
     set_start_value.(model[:xst], warm_states)
     set_start_value.(model[:u], warm_ctrls)
 end
 
-
-
 function distance(pt1, pt2)
     return norm(pt1 - pt2)
 end
-
 
 function updateX0(model, cur_state, cur_ctrl)
     fix.(model[:xst][1,:], cur_state; force = true)
     fix.(model[:u][1,:], cur_ctrl; force = true)
 end
-
-
-using Plots
-plot()
-# in this example, we assume that prediction and plant are the same model
-t_sim = 0.0
-Δt_sim = 1e-3
-max_sim_time = 10.0
-exec_horizon = 0.2
-
-
-cur_states = [0.0, 0.0, 0.0, 0.0, 0.0, 5.0, 0.0]
-goal_pt = [100.0, 0.0]
-block_list = [40 -1 2.5; 70 1 2.5]
-# define goal position, block position, prediction horizon, number of collocation, and initial states
-# the block is treated as circle: [center_x center_y radius; ...]
-problem_setting = Dict("goal_pt"=>goal_pt,
-                        "block_list"=> block_list, 
-                        "Horizon" => 3,
-                        "n" => 30,
-                        "X0"=> cur_states)
-
-# Here we only provide backward euler propogationm, which means the interpolation is constant next
-model = defineSlamonOCP(problem_setting)
-optimize!(model)  # Here we solve it just for warm start
-
-updateX0(model, [1.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0], [0.0, 0.0])
-states_symbol = model[:xst]
-ctrls_symbol = model[:u]
-
-
-optimize!(model)  
-optStates = value.(model[:xst])
-optCtrls = value.(model[:u])
-plot(optStates[:,1], optStates[:,2])
-
-sr_act, ax_act = getInterpolatedCtrls(model, problem_setting, t_sim)
-
-
-states_his = cur_states
-
-
-for i in 1:Int32(floor(max_sim_time/Δt_sim))
-    global max_sim_time, t_sim, Δt_sim, cur_states, model, goal_pt, sr_act, ax_act, states_his, optStates, optCtrls, states_symbol, ctrls_symbol
-    if distance(cur_states[1:2], goal_pt) <= 3.6
-        break
-    end
-    if mod(i, Int32(exec_horizon/Δt_sim)) == 1
-        ctrls = [sr_act(t_sim), ax_act(t_sim)]
-        updateX0(model, cur_states, ctrls) 
-        setWarmStart(model, optStates, optCtrls, cur_states, ctrls)
-        optimize!(model) 
-        optStates = value.(model[:xst])
-        optCtrls = value.(model[:u])
-        sr_act, ax_act = getInterpolatedCtrls(model, problem_setting, t_sim)
-        h = plot(states_his[1,:], states_his[2,:], color =:black, aspect_ratio =:equal)
-        h = plot!(h, optStates[:,1],optStates[:,2], color =:red)
-        display(h)
-        sleep(0.01)
-    end
-    ctrls = [sr_act(t_sim), ax_act(t_sim)]
-    δstates = dynamics(cur_states, ctrls)
-    cur_states = cur_states .+ vec(δstates).*Δt_sim
-    states_his = [states_his cur_states]
-    t_sim = t_sim + Δt_sim
-end
-
-
-
-
