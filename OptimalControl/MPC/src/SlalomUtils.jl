@@ -3,7 +3,7 @@ using JuMP
 using MAT
 using Interpolations
 import Ipopt
-import HSL_jll
+# import HSL_jll
 using LinearAlgebra
 using Statistics
 include("VehicleModel.jl")
@@ -26,7 +26,7 @@ function defineSlamonOCP(problem_setting)
     ######################## IMPORTANT!!!! Setting for IPOPT ######################## 
     user_options = (
     "mu_strategy" => "adaptive",
-    "linear_solver" => "ma57",
+    # "linear_solver" => "ma57",
     "max_iter" => 500,
     "tol" => 4e-2,
     "dual_inf_tol" => 2.,
@@ -38,17 +38,17 @@ function defineSlamonOCP(problem_setting)
     "acceptable_compl_inf_tol" => 0.02,
     "warm_start_init_point" => "yes",
     "fixed_variable_treatment" => "relax_bounds",
-    "max_cpu_time" => 2.0,
+    "max_cpu_time" => 0.2,
     "print_level" => 1,
     )
 
     # Create JuMP model, using Ipopt as the solver
     model = Model(optimizer_with_attributes(Ipopt.Optimizer, user_options...))
     # states: x y v r ψ ux sa
-    XL = [-100, -5, -5, -2*pi, -pi, 1, -pi/9]
-    XU = [100, 5, 5, 2*pi, pi, 20, pi/9]
-    CL=[-pi/8, -6]
-    CU=[ pi/8, 6]
+    XL = [-10, -20, -2, -pi/2,  -pi/2, 1, -pi/9]
+    XU = [130, 20, 2, pi/2,  pi/2, 10, pi/9]
+    CL = [-0.5, -2.5]
+    CU = [0.5, 2.5]
 
     numStates = size(XL, 1)
     @variables(model, begin
@@ -105,21 +105,22 @@ function defineSlamonOCP(problem_setting)
     end
 
 
-    smx = 1.0
-    smy = 1.0
+    smx = 0.0
+    smy = 0.0
     # obs_softconstraint = @expression(model, sum((tanh(-1.4*((x[i] - block_list[j, 1])^2/(block_list[j,3] + smx)^2 +(y[i] - block_list[j, 2])^2/(block_list[j,3] + smy)^2)) + 1)/2 for i=1:n for j=1:size(block_list, 1) ))
     obs_hardconstraint = @constraint(model, [i=1:n, j=1:size(block_list, 1)],1<=((x[i]-block_list[j,1])^2)/((block_list[j,3]+smx)^2)+((y[i]-block_list[j,2])^2)/((block_list[j,3]+smy)^2))
     k_cost = @expression( model, sum((r[j]/ux[j])^2  for j=1:1:n))
     v_cost = @expression( model, sum((v[j])^2  for j=1:1:n))
     sr_cost = @expression( model, sum((sr[j])^2  for j=1:1:n))
-    y_cost = @expression( model, sum( sqrt((y[j])^2+0.1)  for j=1:1:n))
+    # y_cost = @expression( model, sum( sqrt((y[j])^2+0.1)  for j=1:1:n))
+    y_cost = @expression( model, sum( (y[j])^2  for j=1:1:n))
     ax_cost = @expression( model, sum((ax[j])^2  for j=1:1:n))
     sa_cost = @expression( model, sum((sa[j])^2  for j=1:1:n))
 
 
     obj_goal = @expression(model, ((x[end] - goal_pt[1])^2 + (y[end] - goal_pt[2])^2)/( (x[end] - x[1])^2 + (y[end] - y[1])^2  + 0.1 )  ) # 1 is added in the dominator to avoid singurality
 
-    @objective(model, Min, 150*obj_goal + 5*y_cost + 0.1*ax_cost + 1.5*sr_cost + 0.1*k_cost + 0.05*v_cost + 1*sa_cost)
+    @objective(model, Min, 300*obj_goal + 1*y_cost + 0.01*ax_cost + 0.15*sr_cost + 200*k_cost + 0.05*v_cost + 1*sa_cost)
     set_silent(model)  # Hide solver's verbose output
     return model
 end
@@ -148,4 +149,32 @@ end
 function updateX0(model, cur_state, cur_ctrl)
     fix.(model[:xst][1,:], cur_state; force = true)
     fix.(model[:u][1,:], cur_ctrl; force = true)
+end
+
+function circleShape(h,k,r)
+    θ = LinRange(0, 2*π, 500)
+    h.+r*sin.(θ), k.+r*cos.(θ)
+end
+
+
+function plotRes(problem_setting, states_his, optStates)
+
+
+	goal_pt = problem_setting["goal_pt"]
+    obs_setting = problem_setting["block_list"]
+
+	h = plot(size = [1000, 600])
+
+    h = plot!(h, optStates[:,1], optStates[:,2],aspect_ratio=:equal, lc=:red, legend=false)
+
+    h = plot!(states_his[1,:], states_his[2,:], aspect_ratio=:equal, lc=:green, xlims = (-10, 110), ylims = (-10, 10), title =  "ux = $(round(states_his[6, end]; digits = 2)) m/s")
+        
+    for obs_idx = 1:1:size(obs_setting, 1)
+        h = plot!(h, circleShape(obs_setting[obs_idx, 1], obs_setting[obs_idx, 2], obs_setting[obs_idx, 3]), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 1.0)
+    end
+	h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 7.2), seriestype = [:shape,], ;w = 0.5, c=:green, linecolor = :green, legend = false, fillalpha = 1.0)
+
+
+    return h
+
 end

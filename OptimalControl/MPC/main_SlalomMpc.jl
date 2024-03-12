@@ -11,15 +11,14 @@ plot()
 ########################   Settings on Simulation and MPC ######################## 
 t_sim = 0.0
 Δt_sim = 1e-3
-max_sim_time = 10.0
-exec_horizon = 0.2
+max_sim_time = 20.0
+exec_horizon = 0.1
 
 ########################   Settings on the Slalom Scenario ######################## 
 
 cur_states = [0.0, 0.0, 0.0, 0.0, 0.0, 5.0, 0.0]
-goal_pt = [100.0, 0.0]
-block_list = [40 -1 2.5; 70 1 2.5]
-
+goal_pt = [110.0, 0.0]
+block_list = [50.0 1 2.5; 70.0 -1 2.5; 90.0 1 2.5]
 
 ########################   Transcribe into mathematical prohramming ######################## 
 
@@ -53,7 +52,7 @@ for i in 1:Int32(floor(max_sim_time/Δt_sim))
     global max_sim_time, t_sim, Δt_sim, cur_states, model, goal_pt, sr_act, ax_act, states_his, optStates, optCtrls
     
     ########################  if the position is within the goal point for 3.6m, the simulation will stop  ######################## 
-    if distance(cur_states[1:2], goal_pt) <= 3.6
+    if distance(cur_states[1:2], goal_pt) <= 7.2
         break
     end
 
@@ -66,10 +65,6 @@ for i in 1:Int32(floor(max_sim_time/Δt_sim))
         optStates = value.(model[:xst])
         optCtrls = value.(model[:u])
         sr_act, ax_act = getInterpolatedCtrls(model, problem_setting, t_sim)
-        h = plot(states_his[1,:], states_his[2,:], color =:black, aspect_ratio =:equal)
-        h = plot!(h, optStates[:,1],optStates[:,2], color =:red)
-        display(h)
-        sleep(0.01)
     end
 
     ########################  simulate the plant by sending the interpolated optimal control  ######################## 
@@ -78,4 +73,10 @@ for i in 1:Int32(floor(max_sim_time/Δt_sim))
     cur_states = cur_states .+ vec(δstates).*Δt_sim
     states_his = [states_his cur_states]
     t_sim = t_sim + Δt_sim
+
+    if mod(i, Int32(0.05/Δt_sim)) == 1
+        h = plotRes(problem_setting, states_his, optStates)
+        display(h)
+        sleep(0.001)
+    end
 end
