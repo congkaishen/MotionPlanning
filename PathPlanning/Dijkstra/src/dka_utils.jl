@@ -184,32 +184,25 @@ function FindNewNode(dka::DKASearcher, current_node::DKANode)
             temp_f = current_node.f + sqrt((new_position[1] - current_node.position[1])^2*dka.s.x_factor^2 + (new_position[2] - current_node.position[2])^2*dka.s.y_factor^2 )
 
             if haskey(dka.p.nodes_collection, neighbor_idx)
-                temp_node = deepcopy(dka.p.nodes_collection[ Encode(dka, new_position) ])
+                temp_node = dka.p.nodes_collection[ Encode(dka, new_position) ]
                 if temp_f<temp_node.f
+                    temp_node.f = temp_f
+                    temp_node.parent = cur_idx
                     need_update = true
                 else
                     need_update = false
                 end
             else
                 temp_node = DKANode(cur_idx, new_position, temp_f)
-                temp_node.f = temp_f
-                temp_node.parent = cur_idx
                 dka.p.nodes_collection[neighbor_idx] = temp_node
                 need_update = true
             end
 
             if need_update
-                temp_node.f = temp_f
-                temp_node.parent = cur_idx
-                dka.p.nodes_collection[neighbor_idx] = temp_node
-
                 if !InOpen(dka, temp_node)
                      push!(dka.p.open_list, temp_node)
                 end
-
             end
-
-
         end
 
     end
