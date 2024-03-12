@@ -1,5 +1,4 @@
-include("./ReedsSheppsCurves.jl")
-
+include("./src/ReedsSheppsUtils.jl")
 
 x0 = 10*(2*rand(1)[1]-1)
 y0 = 10*(2*rand(1)[1]-1)
@@ -17,7 +16,6 @@ norm_states = changeBasis(init_st, termi_st, minR)
 opt_cmd, opt_cost, cmds, costs = allpath(norm_states)
 act_opt_cost = opt_cost*minR
     
-
 
 using Plots
 h1 = plotpaths(cmds, costs)
