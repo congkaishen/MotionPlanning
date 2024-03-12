@@ -18,7 +18,7 @@ BoundPosition = [0; 100; 0; 100]
 obs_list = [[50,50,25],[15,15,8],[70,10,0],[10,70,10],[90,50,10],[50,90,10]]
 
 
-dka = defineDKA(BoundPosition, [51, 51], starting_pose[1:2], ending_pose[1:2], false)
+dka = defineDKA(BoundPosition, [51, 51], starting_pose[1:2], ending_pose[1:2], true)
 defineDKAobs!(dka, obs_list)
 @time planDKA!(dka)
 # plot(dka.r.actualpath[:,1], dka.r.actualpath[:,2])
