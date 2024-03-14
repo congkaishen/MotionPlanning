@@ -25,19 +25,22 @@ for i = 1:1:size(obs_location_temp, 1)
     obs_location[i] = obs_location_temp[i, :]
 end
 
-# starting_ang = [0.0; 0.0]
-# starting_ux = 2.0
-# ending_pose = [100.0; 100.0]
-# ending_ang = [0.0; 0.0]
-# ending_ux = 2.0
-# buffer_size = 100
-# BoundPosition = [0; 100; 0; 100]
-# obs_list = [[50,50,25],[15,15,8],[70,10,0],[10,70,10],[90,50,10],[50,90,10]]
 
 
-bfs = defineBFS(BoundPosition, [51, 51], starting_pose[1:2], ending_pose[1:2])
+draw_fig = true
+make_gif = true
+if make_gif
+    if isdir("./gifholder")
+        println("Already Exists")
+        foreach(rm, filter(endswith(".gif"), readdir("./gifholder",join=true)))
+    else
+        mkdir("./gifholder")
+    end
+end
+
+
+bfs = defineBFS(BoundPosition, [51, 51], starting_pose[1:2], ending_pose[1:2],draw_fig, make_gif)
 defineBFSobs!(bfs, obs_location)
 planBFS!(bfs)
 h = plotRes(bfs)
 display(h)
-# plot(bfs.r.actualpath[:,1], bfs.r.actualpath[:,2])

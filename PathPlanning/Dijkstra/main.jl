@@ -25,9 +25,19 @@ for i = 1:1:size(obs_location_temp, 1)
 end
 
 
-dka = defineDKA(BoundPosition, [51, 51], starting_pose[1:2], ending_pose[1:2], true)
+draw_fig = false
+make_gif = false
+if make_gif
+    if isdir("./gifholder")
+        println("Already Exists")
+        foreach(rm, filter(endswith(".gif"), readdir("./gifholder",join=true)))
+    else
+        mkdir("./gifholder")
+    end
+end
+
+dka = defineDKA(BoundPosition, [51, 51], starting_pose[1:2], ending_pose[1:2], draw_fig, make_gif)
 defineDKAobs!(dka, obs_location)
 @time planDKA!(dka)
-# plot(dka.r.actualpath[:,1], dka.r.actualpath[:,2])
 h = plotRes(dka)
 display(h)

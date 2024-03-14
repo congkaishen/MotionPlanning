@@ -18,7 +18,8 @@ Base.isless(a::DKANode, b::DKANode) = isless(a.f, b.f)
     obstacle_list::Vector{Vector{Float64}} = Vector{Vector{Float64}}[]
     x_factor::Float64 = 0.0
     y_factor::Float64 = 0.0
-    draw_fig::Bool = true
+    draw_fig::Bool = false
+    make_gif::Bool = false
 end
 
 @with_kw mutable struct DKAPlanner

@@ -5,7 +5,7 @@ end
 
 
 function plotRes(dka)
-
+    title_string = "Iterations: $(dka.p.loop_count), Expansions: $(length(dka.p.nodes_collection)), Open List: $(size(dka.p.open_list, 1))"
     start_pt = dka.s.starting_real
 	goal_pt = dka.s.ending_real
     obs_setting = dka.s.obstacle_list
@@ -26,7 +26,7 @@ function plotRes(dka)
         h = plot!(h, circleShape(obs_setting[obs_idx][1], obs_setting[obs_idx][2], obs_setting[obs_idx][3]), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 1.0)
     end
 	h = plot!(h, circleShape(start_pt[1],start_pt[2], 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:red, linecolor = :red, legend = false, fillalpha = 1.0)
-    h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:green, linecolor = :green, legend = false, fillalpha = 1.0, framestyle = :box,xlim=(dka.s.actualbound[1]-2, dka.s.actualbound[2]+2), ylim=(dka.s.actualbound[3]-2, dka.s.actualbound[4]+2))
+    h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:green, linecolor = :green, legend = false, fillalpha = 1.0, framestyle = :box,xlim=(dka.s.actualbound[1]-2, dka.s.actualbound[2]+2), ylim=(dka.s.actualbound[3]-2, dka.s.actualbound[4]+2), title = title_string)
     xlabel!("X [m]")
     ylabel!("Y [m]")
     
@@ -69,19 +69,23 @@ end
 function planDKA!(dka::DKASearcher)
     t1 = time()
     push!(dka.p.open_list, dka.p.starting_node)
+    if dka.s.make_gif anim = Plots.Animation() end
     while !isempty(dka.p.open_list)
         dka.p.loop_count = dka.p.loop_count + 1
         sort!(dka.p.open_list)
         current_node = popfirst!(dka.p.open_list)
 
-        if dka.s.draw_fig == true && mod(dka.p.loop_count, 100)==1
+        if (dka.s.draw_fig == true || dka.s.make_gif) && mod(dka.p.loop_count, 10)==1
             retrievepath(dka, current_node) 
-            # println(size(dka.r.actualpath))
             h = plotRes(dka)
-            display(h)
-            sleep(0.001)
+            if dka.s.draw_fig
+                display(h)
+                sleep(0.001)
+            end
+            if dka.s.make_gif
+                Plots.frame(anim)
+            end
         end
-
 
 
         if current_node.position == dka.s.ending_pos
@@ -113,6 +117,8 @@ function planDKA!(dka::DKASearcher)
 
 
     @label escape_label
+    if dka.s.make_gif gif(anim, "./gifholder/Dijkstra.gif", fps = 10) end
+
     t2 = time()
     dka.r.planning_time = t2 - t1
     return nothing

@@ -6,6 +6,7 @@ function defineDKA(
     starting_real = [-3; 20],
     ending_real = [50, 20],
     draw_fig = false,
+    make_gif = false,
     )::DKASearcher
     DKA = DKASearcher();
     DKA.s.actualbound = realsize
@@ -18,6 +19,7 @@ function defineDKA(
     DKA.s.ending_pos = [Int(floor((DKA.s.ending_real[1] - DKA.s.actualbound[1])/DKA.s.x_factor + 1)), Int(floor((DKA.s.ending_real[2] - DKA.s.actualbound[3])/DKA.s.y_factor + 1))]
     DKA.p.starting_node = DKANode(nothing, DKA.s.starting_pos,0)
     DKA.s.draw_fig = draw_fig
+    DKA.s.make_gif = make_gif
     DKA.p.nodes_collection[Encode(DKA, DKA.s.starting_pos)] = DKA.p.starting_node
     return DKA
 end

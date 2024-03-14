@@ -5,6 +5,8 @@ function defineBFS(
     mapbound = [51; 51],
     starting_real = [-3; 20],
     ending_real = [50, 20],
+    draw_fig = false,
+    make_gif = false,
     )::BFSSearcher
     bfs = BFSSearcher();
     bfs.s.actualbound = realsize
@@ -16,8 +18,9 @@ function defineBFS(
     bfs.s.starting_pos = [Int(floor((bfs.s.starting_real[1] - bfs.s.actualbound[1])/bfs.s.x_factor + 1)), Int(floor((bfs.s.starting_real[2] - bfs.s.actualbound[3])/bfs.s.y_factor + 1))]
     bfs.s.ending_pos = [Int(floor((bfs.s.ending_real[1] - bfs.s.actualbound[1])/bfs.s.x_factor + 1)), Int(floor((bfs.s.ending_real[2] - bfs.s.actualbound[3])/bfs.s.y_factor + 1))]
     bfs.p.starting_node = BFSNode(nothing, bfs.s.starting_pos)
-
     bfs.p.nodes_collection[Encode(bfs, bfs.s.starting_pos)] = bfs.p.starting_node
+    bfs.s.draw_fig = draw_fig
+    bfs.s.make_gif = make_gif
     return bfs
 end
 

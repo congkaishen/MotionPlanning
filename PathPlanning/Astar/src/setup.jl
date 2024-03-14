@@ -6,7 +6,7 @@ function defineAstar(
     starting_real = [-3; 20],
     ending_real = [50, 20],
     draw_fig = false,
-    )::AstarSearcher
+    make_gif = false)::AstarSearcher
     astar = AstarSearcher();
     astar.s.actualbound = realsize
     astar.s.mapbound = mapbound
@@ -18,6 +18,7 @@ function defineAstar(
     astar.s.ending_pos = [Int(floor((astar.s.ending_real[1] - astar.s.actualbound[1])/astar.s.x_factor + 1)), Int(floor((astar.s.ending_real[2] - astar.s.actualbound[3])/astar.s.y_factor + 1))]
     astar.p.starting_node = AstarNode(nothing, astar.s.starting_pos, 0, 0, 0)
     astar.s.draw_fig = draw_fig
+    astar.s.make_gif = make_gif
     astar.p.nodes_collection[Encode(astar, astar.s.starting_pos)] = astar.p.starting_node
     return astar
 end

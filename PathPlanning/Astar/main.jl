@@ -25,10 +25,22 @@ for i = 1:1:size(obs_location_temp, 1)
     obs_location[i] = obs_location_temp[i, :]
 end
 
+draw_fig = false
+make_gif = false
+if make_gif
+    if isdir("./gifholder")
+        println("Already Exists")
+        foreach(rm, filter(endswith(".gif"), readdir("./gifholder",join=true)))
+    else
+        mkdir("./gifholder")
+    end
+end
 
-astar = defineAstar(BoundPosition, [51, 51], starting_pose[1:2], ending_pose[1:2], true)
+
+astar = defineAstar(BoundPosition, [51, 51], starting_pose[1:2], ending_pose[1:2], draw_fig, make_gif)
 defineAstarobs!(astar, obs_location)
 @time planAstar!(astar)
-# plot(astar.r.actualpath[:,1], astar.r.actualpath[:,2])
+
+################################# Show the Result ######################################
 h = plotRes(astar)
 display(h)

@@ -5,6 +5,7 @@ end
 
 
 function plotRes(astar)
+    title_string = "Iterations: $(astar.p.loop_count), Expansions: $(length(astar.p.nodes_collection)), Open List: $(size(astar.p.open_list, 1))"
 	goal_pt = astar.s.ending_real
     start_pt = astar.s.starting_real
     obs_setting = astar.s.obstacle_list
@@ -22,7 +23,8 @@ function plotRes(astar)
         h = plot!(h, circleShape(obs_setting[obs_idx][1], obs_setting[obs_idx][2], obs_setting[obs_idx][3]), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 1.0)
     end
     h = plot!(h, circleShape(start_pt[1],start_pt[2], 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:red, linecolor = :red, legend = false, fillalpha = 1.0)
-	h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 1), seriestype = [:shape,], ;w = 0.5, c=:green, linecolor = :green, legend = false, fillalpha = 1.0, framestyle = :box,xlim=(astar.s.actualbound[1]-2, astar.s.actualbound[2]+2), ylim=(astar.s.actualbound[3]-2, astar.s.actualbound[4]+2))
+	h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 1), seriestype = [:shape,], ;w = 0.5, c=:green, linecolor = :green, legend = false, fillalpha = 1.0, framestyle = :box,xlim=(astar.s.actualbound[1]-2, astar.s.actualbound[2]+2), ylim=(astar.s.actualbound[3]-2, astar.s.actualbound[4]+2), title = title_string)
+    
     return h
 
 end
@@ -58,20 +60,27 @@ end
 function planAstar!(astar::AstarSearcher)
     t1 = time()
     push!(astar.p.open_list, astar.p.starting_node)
+
+    if astar.s.make_gif anim = Plots.Animation() end
     while !isempty(astar.p.open_list)
         astar.p.loop_count = astar.p.loop_count + 1
         sort!(astar.p.open_list)
         current_node = popfirst!(astar.p.open_list)
 
-        if astar.s.draw_fig == true && mod(astar.p.loop_count, 10)==1
+        if (astar.s.draw_fig == true || astar.s.make_gif) && mod(astar.p.loop_count, 10)==1
             retrievepath(astar, current_node) 
-            # println(size(astar.r.actualpath))
             h = plotRes(astar)
-            display(h)
-            sleep(0.001)
+            
+            if astar.s.draw_fig
+                display(h)
+                sleep(0.001)
+            end
+
+            if astar.s.make_gif
+                Plots.frame(anim)
+            end
+
         end
-
-
 
         if current_node.position == astar.s.ending_pos
             astarpath = astar.s.ending_pos
@@ -99,11 +108,11 @@ function planAstar!(astar::AstarSearcher)
 
         FindNewNode(astar, current_node)
     end
-
-
     @label escape_label
     t2 = time()
     astar.r.planning_time = t2 - t1
+
+    if astar.s.make_gif gif(anim, "./gifholder/Astar.gif", fps = 10) end
     return nothing
 end
 

@@ -1,20 +1,24 @@
 function planBFS!(bfs::BFSSearcher)
     t1 = time()
     push!(bfs.p.open_list, bfs.p.starting_node)
+
+    if bfs.s.make_gif anim = Plots.Animation() end
     while !isempty(bfs.p.open_list)
+        
         bfs.p.loop_count = bfs.p.loop_count + 1
-        # println(bfs.p.loop_count)
         current_node = popfirst!(bfs.p.open_list)
 
-
-        if  mod(bfs.p.loop_count, 30)==1
+        if (bfs.s.draw_fig == true || bfs.s.make_gif) && mod(bfs.p.loop_count, 10)==1
             retrievepath(bfs, current_node) 
-            # println(size(bfs.r.actualpath))
             h = plotRes(bfs)
-            display(h)
-            sleep(0.001)
+            if bfs.s.draw_fig
+                display(h)
+                sleep(0.001)
+            end
+            if bfs.s.make_gif
+                Plots.frame(anim)
+            end
         end
-
 
         if current_node.position == bfs.s.ending_pos
             bfspath = bfs.s.ending_pos
@@ -47,6 +51,8 @@ function planBFS!(bfs::BFSSearcher)
 
 
     @label escape_label
+    if bfs.s.make_gif gif(anim, "./gifholder/BreadthFirstSearch.gif", fps = 10) end
+
     t2 = time()
     bfs.r.planning_time = t2 - t1
     return nothing
@@ -189,6 +195,8 @@ end
 
 
 function plotRes(bfs)
+    title_string = "Iterations: $(bfs.p.loop_count), Expansions: $(length(bfs.p.nodes_collection)), Open List: $(size(bfs.p.open_list, 1))"
+
 	goal_pt = bfs.s.ending_real
     start_pt = bfs.s.starting_real
     obs_setting = bfs.s.obstacle_list
@@ -200,7 +208,6 @@ function plotRes(bfs)
         for (key, node) in bfs.p.nodes_collection
             act_pos = TransferCoordinate(bfs, node.position)
             h = scatter!(h, [act_pos[1]], [act_pos[2]], color=:gray, fillalpha = 0.2, markersize=2)
-            # h = plot!(h, circleShape(act_pos[1], act_pos[2], 0.25), seriestype = [:shape,], ;w = 0.5, c=:gray, legend = false, fillalpha = 0.2)
         end
     end
     if size(bfs.r.actualpath, 1) > 2
@@ -211,7 +218,7 @@ function plotRes(bfs)
     end
 
     h = plot!(h, circleShape(start_pt[1],start_pt[2], 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:red, linecolor = :red, legend = false, fillalpha = 1.0)
-    h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:green, linecolor = :green, legend = false, fillalpha = 1.0, framestyle = :box,xlim=(bfs.s.actualbound[1]-2, bfs.s.actualbound[2]+2), ylim=(bfs.s.actualbound[3]-2, bfs.s.actualbound[4]+2))
+    h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:green, linecolor = :green, legend = false, fillalpha = 1.0, framestyle = :box,xlim=(bfs.s.actualbound[1]-2, bfs.s.actualbound[2]+2), ylim=(bfs.s.actualbound[3]-2, bfs.s.actualbound[4]+2), title = title_string)
     xlabel!("X [m]")
     ylabel!("Y [m]")
 
