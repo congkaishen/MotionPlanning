@@ -12,7 +12,6 @@ ending_ang = 0.0
 # ending_pose = [110.0; 0.0]
 # buffer_size = 100
 # BoundPosition = [-10; 120; -10; 10]
-
 # obs_location = [[50.0, 1, 2.5], [70.0, -1, 2.5], [90.0, 1, 2.5]]
 
 starting_pose = [0.0; 0.0]

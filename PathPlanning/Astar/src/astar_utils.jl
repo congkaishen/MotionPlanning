@@ -5,20 +5,24 @@ end
 
 
 function plotRes(astar)
-	goal_pt = astar.s.ending_pos
+	goal_pt = astar.s.ending_real
+    start_pt = astar.s.starting_real
     obs_setting = astar.s.obstacle_list
-	h = plot(size = [1000, 600])
-    if size(astar.r.actualpath, 1) > 2
+	h = plot(size = [600, 600])
+    if length(astar.p.nodes_collection) > 2
         for (key, node) in astar.p.nodes_collection
             act_pos = TransferCoordinate(astar, node.position)
-            h = scatter!(h, [act_pos[1]], [act_pos[2]], c=:gray, fillalpha = 0.1)
+            h = scatter!(h, [act_pos[1]], [act_pos[2]], c=:gray, fillalpha = 0.1, markersize=2)
         end
-        h = plot!(h, astar.r.actualpath[:,1], astar.r.actualpath[:,2],aspect_ratio=:equal, lc=:red, legend=false)
+    end
+    if size(astar.r.actualpath, 1) > 2
+        h = plot!(h, astar.r.actualpath[:,1], astar.r.actualpath[:,2],aspect_ratio=:equal, lc=:green, legend=false, linewidth=5)
     end
     for obs_idx = 1:1:size(obs_setting, 1)
         h = plot!(h, circleShape(obs_setting[obs_idx][1], obs_setting[obs_idx][2], obs_setting[obs_idx][3]), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 1.0)
     end
-	h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 0.25), seriestype = [:shape,], ;w = 0.5, c=:green, linecolor = :green, legend = false, fillalpha = 1.0)
+    h = plot!(h, circleShape(start_pt[1],start_pt[2], 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:red, linecolor = :red, legend = false, fillalpha = 1.0)
+	h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 1), seriestype = [:shape,], ;w = 0.5, c=:green, linecolor = :green, legend = false, fillalpha = 1.0, framestyle = :box,xlim=(astar.s.actualbound[1]-2, astar.s.actualbound[2]+2), ylim=(astar.s.actualbound[3]-2, astar.s.actualbound[4]+2))
     return h
 
 end

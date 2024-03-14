@@ -6,31 +6,29 @@ end
 
 function plotRes(dka)
 
-
-	goal_pt = dka.s.ending_pos
+    start_pt = dka.s.starting_real
+	goal_pt = dka.s.ending_real
     obs_setting = dka.s.obstacle_list
 
-	h = plot(size = [1000, 600])
-
-    if size(dka.r.actualpath, 1) > 2
-
-
+	h = plot(size = [600, 600])
+    if length(dka.p.nodes_collection) > 2
         for (key, node) in dka.p.nodes_collection
-
             act_pos = TransferCoordinate(dka, node.position)
-
-            h = scatter!(h, [act_pos[1]], [act_pos[2]], c=:gray, fillalpha = 0.2)
-            # h = plot!(h, circleShape(act_pos[1], act_pos[2], 0.25), seriestype = [:shape,], ;w = 0.5, c=:gray, legend = false, fillalpha = 0.2)
+            h = scatter!(h, [act_pos[1]], [act_pos[2]], c=:gray, fillalpha = 0.2, markersize=2)
         end
+    end
 
-        h = plot!(h, dka.r.actualpath[:,1], dka.r.actualpath[:,2],aspect_ratio=:equal, lc=:red, legend=false)
+    if  size(dka.r.actualpath, 1) > 2
+        h = plot!(h, dka.r.actualpath[:,1], dka.r.actualpath[:,2],aspect_ratio=:equal, lc=:green, legend=false, linewidth=5)
     end
 
     for obs_idx = 1:1:size(obs_setting, 1)
         h = plot!(h, circleShape(obs_setting[obs_idx][1], obs_setting[obs_idx][2], obs_setting[obs_idx][3]), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 1.0)
     end
-	h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 0.25), seriestype = [:shape,], ;w = 0.5, c=:green, linecolor = :green, legend = false, fillalpha = 1.0)
-
+	h = plot!(h, circleShape(start_pt[1],start_pt[2], 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:red, linecolor = :red, legend = false, fillalpha = 1.0)
+    h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:green, linecolor = :green, legend = false, fillalpha = 1.0, framestyle = :box,xlim=(dka.s.actualbound[1]-2, dka.s.actualbound[2]+2), ylim=(dka.s.actualbound[3]-2, dka.s.actualbound[4]+2))
+    xlabel!("X [m]")
+    ylabel!("Y [m]")
     
 
     return h

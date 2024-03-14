@@ -30,5 +30,5 @@ astar = defineAstar(BoundPosition, [51, 51], starting_pose[1:2], ending_pose[1:2
 defineAstarobs!(astar, obs_location)
 @time planAstar!(astar)
 # plot(astar.r.actualpath[:,1], astar.r.actualpath[:,2])
-# h = plotRes(astar)
-# display(h)
+h = plotRes(astar)
+display(h)

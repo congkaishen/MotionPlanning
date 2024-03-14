@@ -148,31 +148,6 @@ function FindNewNode(bfs::BFSSearcher, current_node::BFSNode)
                 bfs.p.nodes_collection[neighbor_idx] = temp_node
                 push!(bfs.p.open_list, temp_node)
             end
-
-
-
-
-            # if InOpen(bfs, temp_node)
-            #     if !need_update
-            #         continue
-            #     end
-            # elseif InClose(bfs, temp_node)
-            #     if !need_update
-            #         continue
-            #     end
-            #
-            #     RemoveClose(bfs, temp_node)
-            #     temp_node.f = temp_f
-            #     push!(bfs.p.open_list, temp_node)
-            # else
-            #     temp_node.g = temp_g
-            #     temp_node.h = temp_h
-            #     temp_node.f = temp_f
-            #     temp_node.parent = cur_idx
-            #     bfs.p.nodes_collection[neighbor_idx] = temp_node
-            # end
-
-
         end
 
     end
@@ -215,24 +190,30 @@ end
 
 function plotRes(bfs)
 	goal_pt = bfs.s.ending_real
+    start_pt = bfs.s.starting_real
     obs_setting = bfs.s.obstacle_list
 
-	h = plot(size = [1000, 600])
-	h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 2), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:green, linecolor = :green, legend = false, fillalpha = 1.0)
+	h = plot(size = [600, 600])
+
 
     if size(bfs.r.actualpath, 1) > 2
         for (key, node) in bfs.p.nodes_collection
             act_pos = TransferCoordinate(bfs, node.position)
-            h = scatter!(h, [act_pos[1]], [act_pos[2]], c=:gray, fillalpha = 0.2, markersize=1)
+            h = scatter!(h, [act_pos[1]], [act_pos[2]], color=:gray, fillalpha = 0.2, markersize=2)
             # h = plot!(h, circleShape(act_pos[1], act_pos[2], 0.25), seriestype = [:shape,], ;w = 0.5, c=:gray, legend = false, fillalpha = 0.2)
         end
     end
-
+    if size(bfs.r.actualpath, 1) > 2
+        h = plot!(h,bfs.r.actualpath[:,1], bfs.r.actualpath[:,2], lc = :green, linewidth=5)
+    end
     for obs_idx = 1:1:size(obs_setting, 1)
         h = plot!(h, circleShape(obs_setting[obs_idx][1], obs_setting[obs_idx][2], obs_setting[obs_idx][3]), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 1.0)
     end
 
-    
+    h = plot!(h, circleShape(start_pt[1],start_pt[2], 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:red, linecolor = :red, legend = false, fillalpha = 1.0)
+    h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:green, linecolor = :green, legend = false, fillalpha = 1.0, framestyle = :box,xlim=(bfs.s.actualbound[1]-2, bfs.s.actualbound[2]+2), ylim=(bfs.s.actualbound[3]-2, bfs.s.actualbound[4]+2))
+    xlabel!("X [m]")
+    ylabel!("Y [m]")
 
     return h
 

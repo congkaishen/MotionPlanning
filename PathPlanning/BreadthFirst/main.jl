@@ -38,5 +38,6 @@ end
 bfs = defineBFS(BoundPosition, [51, 51], starting_pose[1:2], ending_pose[1:2])
 defineBFSobs!(bfs, obs_location)
 planBFS!(bfs)
-
+h = plotRes(bfs)
+display(h)
 # plot(bfs.r.actualpath[:,1], bfs.r.actualpath[:,2])
