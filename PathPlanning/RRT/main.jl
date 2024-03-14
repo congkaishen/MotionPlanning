@@ -1,4 +1,5 @@
 include("src/rrt_utils.jl")
+cd(@__DIR__)
 
 
 sampleNum = 10000
@@ -21,7 +22,7 @@ ending_ang = 0.0
 buffer_size = 100
 BoundPosition = [0; 120; 0; 120]
 
-obsinfo = matread("obstacle_field.mat");
+obsinfo = matread("../Scenarios/obstacle_field.mat");
 obsinfo = obsinfo["obstacle_field"]
 Trial_num = 53
 obs_location_temp = obsinfo[Trial_num]
