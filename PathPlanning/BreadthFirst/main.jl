@@ -27,8 +27,8 @@ end
 
 
 
-draw_fig = true
-make_gif = true
+draw_fig = false
+make_gif = false
 if make_gif
     if isdir("./gifholder")
         println("Already Exists")
