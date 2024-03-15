@@ -2,17 +2,10 @@ include("src/rrt_utils.jl")
 cd(@__DIR__)
 
 
-sampleNum = 10000
-rrt_star = false
-bias_rate = 0.05
+sampleNum = 30000
+rrt_star = true
+bias_rate = 0.1
 ending_ang = 0.0
-
-# starting_pose = [0.0; 0.0]
-# starting_ang = 0.0
-# ending_pose = [110.0; 0.0]
-# buffer_size = 100
-# BoundPosition = [-10; 120; -10; 10]
-# obs_location = [[50.0, 1, 2.5], [70.0, -1, 2.5], [90.0, 1, 2.5]]
 
 starting_pose = [0.0; 0.0]
 starting_ang = 0.0
@@ -30,38 +23,18 @@ for i = 1:1:size(obs_location_temp, 1)
     obs_location[i] = obs_location_temp[i, :]
 end
 
+draw_fig = false
+make_gif = false
+if make_gif
+    if isdir("./gifholder")
+        println("Already Exists")
+        foreach(rm, filter(endswith(".gif"), readdir("./gifholder",join=true)))
+    else
+        mkdir("./gifholder")
+    end
+end
 
-
-rrt = defineRRT(sampleNum, starting_pose, ending_pose, buffer_size, BoundPosition, rrt_star, bias_rate )
+rrt = defineRRT(sampleNum, starting_pose, ending_pose, buffer_size, BoundPosition, rrt_star, bias_rate, draw_fig, make_gif)
 defineRRTobs!(rrt, obs_location)
 planRRT!(rrt)
 plotRes(rrt)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# defineRRTcandidate(tpp.rrt)
-# tpp.rrt.s.buffer_size = buffer_size
-# tpp.rrt.s.draw_fig = false
-
-# defineLTRKeyParams(tpp.ltr, 1, 0.2, 0.1, 0.02)
-# # println("Start Planning")
-# planAstar!(tpp.astar)
-# total_length = sum( sqrt.( (tpp.astar.r.actualpath[1:end-1, 1] - tpp.astar.r.actualpath[2:end, 1]).^2 + (tpp.astar.r.actualpath[1:end-1, 2] - tpp.astar.r.actualpath[2:end, 2]).^2) )
-# gap =  Int64(  maximum([floor(size(tpp.astar.r.actualpath, 1)/(floor(total_length/tpp.rrt.s.sample_max_dist))),  1])  )
-# sampling_bias_points = tpp.astar.r.actualpath[1:gap:end, :]
-
-# tpp.rrt.p.sampling_bias_points = sampling_bias_points
-# planRRT!(tpp.rrt)
-
-# plotRes(tpp.rrt)

@@ -15,7 +15,6 @@ starting_pose = [0.0; 0.0]
 ending_pose = [120.0; 120.0]
 BoundPosition = [0; 120; 0; 120]
 
-
 obsinfo = matread("../Scenarios/obstacle_field.mat");
 obsinfo = obsinfo["obstacle_field"]
 Trial_num = 53
@@ -25,7 +24,7 @@ for i = 1:1:size(obs_location_temp, 1)
     obs_location[i] = obs_location_temp[i, :]
 end
 
-draw_fig = false
+draw_fig = true
 make_gif = false
 if make_gif
     if isdir("./gifholder")
@@ -35,7 +34,6 @@ if make_gif
         mkdir("./gifholder")
     end
 end
-
 
 astar = defineAstar(BoundPosition, [51, 51], starting_pose[1:2], ending_pose[1:2], draw_fig, make_gif)
 defineAstarobs!(astar, obs_location)

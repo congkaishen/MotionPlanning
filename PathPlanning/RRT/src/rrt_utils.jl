@@ -27,13 +27,10 @@ function sampleRRT(rrt::RRTSearcher)::RRTNode
     if rand_num < bias_rate
         xpos = rrt.p.ending_node.loc[1]
         ypos = rrt.p.ending_node.loc[2]
-        zpos = 0.0
     else
         xpos = rand(1).*(max_x-min_x).+min_x
         ypos = rand(1).*(max_y-min_y).+min_y
-        zpos = 0.0
     end
-    zpos = 0
 
     newloc = [xpos;ypos]
 
@@ -193,12 +190,10 @@ function steer(rrt::RRTSearcher, startnode::RRTNode, targetnode::RRTNode)::RRTNo
     end
 end
 
-
-
 ############################
 function nearDisk(rrt::RRTSearcher)::Float64
-    gamma = 6*(rrt.s.BoundPosition[2]-rrt.s.BoundPosition[1])*(rrt.s.BoundPosition[4]-rrt.s.BoundPosition[3])*5
-    return minimum([gamma*(log(rrt.p.sample_idx)/rrt.p.sample_idx),  24])
+    gamma = 0.01*(rrt.s.BoundPosition[2]-rrt.s.BoundPosition[1])*(rrt.s.BoundPosition[4]-rrt.s.BoundPosition[3])
+    return minimum([gamma*(log(rrt.p.sample_idx)/rrt.p.sample_idx)^(0.5),  50])
 end
 
 
@@ -348,13 +343,28 @@ function planRRT!(rrt::RRTSearcher)
     sampleNum = rrt.s.sampling_number
     p = Progress(sampleNum-1, 0.5, "RRT Progress...", 60)
 
-    while rrt.p.sample_idx <= sampleNum-1
-        # println(rrt.p.sample_idx)
+    rrt.p.loop_count = 0
+    if rrt.s.make_gif anim = Plots.Animation() end
+    while rrt.p.loop_count <= sampleNum-1
+        rrt.p.loop_count = rrt.p.loop_count + 1
         sample_node = sampleRRT(rrt)
         idxs, min_dist = knn(rrt.p.balltree, sample_node.loc, 1, true)
         min_idx = idxs[1]
         closest_node = rrt.p.nodes_collection[min_idx]
         new_node = steer(rrt, closest_node, sample_node)
+
+        if (rrt.s.draw_fig || rrt.s.make_gif) && (mod(rrt.p.sample_idx, 200)==1)
+            h = plotRes(rrt)
+            if rrt.s.draw_fig
+                display(h)
+                sleep(0.001)
+            end
+
+            if rrt.s.make_gif
+                Plots.frame(anim)
+            end
+        end
+
 
         if !collision(rrt.s.obstacle_list, closest_node, new_node, rrt)
             next!(p)
@@ -362,8 +372,8 @@ function planRRT!(rrt::RRTSearcher)
 
             if rrt.s.rrt_star
                 nearIdxs = inrange(rrt.p.balltree, new_node.loc, nearDisk(rrt), true)
-                if size(nearIdxs, 1) >= 30
-                    nearIdxs,~ = knn(rrt.p.balltree, new_node.loc, 30, true)
+                if size(nearIdxs, 1) >= 100
+                    nearIdxs,~ = knn(rrt.p.balltree, new_node.loc, 100, true)
                 end
 
                 if size(nearIdxs,1) != 0
@@ -396,7 +406,8 @@ function planRRT!(rrt::RRTSearcher)
         rrt.r.status = :NotSolved
     end
     rrt.r.tSolve = t2 - t1
-
+    
+    if rrt.s.make_gif gif(anim, "./gifholder/RRT.gif", fps = 10) end
     return nothing;
 end
 
@@ -429,17 +440,17 @@ function getBestIdxs(rrt::RRTSearcher, idx::Int)::Vector{Int64}
     return idxs
 end
 
-function getTree(rrt::RRTSearcher):: Matrix{Float64}
+function getTree(rrt::RRTSearcher)
     first = true
     tree = nothing
     for idx in 1:rrt.p.sample_idx
         if (rrt.p.parents_collection[idx]!==-1)
             p_idx = rrt.p.parents_collection[idx]
             if first
-                tree = [rrt.p.states_collection[1:3, idx]  rrt.p.states_collection[1:3, p_idx]]
+                tree = [rrt.p.states_collection[1:2, idx]  rrt.p.states_collection[1:2, p_idx]]
                 first = false
             else
-                tree = [tree [rrt.p.states_collection[1:3, idx]  rrt.p.states_collection[1:3, p_idx]]]
+                tree = [tree [rrt.p.states_collection[1:2, idx]  rrt.p.states_collection[1:2, p_idx]]]
             end
         end
     end

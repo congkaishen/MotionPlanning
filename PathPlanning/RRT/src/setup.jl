@@ -6,7 +6,9 @@ function defineRRT(
     buffer_size = 100,
     BoundPosition = [0; 100; 0; 100],
     rrt_star = false,
-    bias_rate = 0.2
+    bias_rate = 0.2,
+    draw_fig = false,
+    make_gif = false,
     )::RRTSearcher
     rrt = RRTSearcher();
     # start node and end node
@@ -32,6 +34,8 @@ function defineRRT(
     rrt.p.balltree = BallTree(rrt.p.states_collection[:, 1:1], MyMetrics())
     rrt.s.rrt_star = rrt_star
     rrt.s.bias_rate = bias_rate
+    rrt.s.draw_fig = draw_fig
+    rrt.s.make_gif = make_gif
     return rrt
 end
 

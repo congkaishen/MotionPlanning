@@ -67,7 +67,7 @@ function planAstar!(astar::AstarSearcher)
         sort!(astar.p.open_list)
         current_node = popfirst!(astar.p.open_list)
 
-        if (astar.s.draw_fig == true || astar.s.make_gif) && mod(astar.p.loop_count, 10)==1
+        if (astar.s.draw_fig || astar.s.make_gif) && mod(astar.p.loop_count, 10)==1
             retrievepath(astar, current_node) 
             h = plotRes(astar)
             
@@ -79,7 +79,6 @@ function planAstar!(astar::AstarSearcher)
             if astar.s.make_gif
                 Plots.frame(anim)
             end
-
         end
 
         if current_node.position == astar.s.ending_pos
