@@ -31,6 +31,16 @@ global states = X0
 global states_his = [0; states]
 
 time_solve = []
+make_gif = true
+if make_gif
+    if isdir("./gifholder")
+        println("Already Exists")
+        foreach(rm, filter(endswith(".gif"), readdir("./gifholder",join=true)))
+    else
+        mkdir("./gifholder")
+    end
+end
+if make_gif anim = Plots.Animation() end
 
 for time_idx = 1:1:Int32(floor(15/δt))
     global NominalControls, time_serial, fined_time_serial, controls, states, states_his
@@ -42,6 +52,9 @@ for time_idx = 1:1:Int32(floor(15/δt))
 
         controls = dwa.r.Control
         h = plotRes(dwa, states_his)
+        if make_gif
+            Plots.frame(anim)
+        end
         display(h)
         sleep(0.1)
     end
@@ -55,3 +68,6 @@ end
 
 
 
+if make_gif gif(anim, "./gifholder/DWA.gif", fps = 10) end
+
+CSV.write("DWATrajectory.csv", Tables.table(states_his'), writeheader=false)

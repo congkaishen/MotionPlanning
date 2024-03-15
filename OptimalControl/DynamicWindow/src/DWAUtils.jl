@@ -168,23 +168,41 @@ function circleShape(h,k,r)
 end
 
 function plotRes(DWA, states_his)
+	h = plot(size = [800, 600])
+	# h = plot()
+    h = plot!(h, circleShape(0,0, 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:red, linecolor = :red, legend = false, fillalpha = 1.0)
 	obs_setting = DWA.s.obstacle_list
-	h = plot(size = [1000, 600])
-
-    h = plot!(states_his[2,:], states_his[3,:], aspect_ratio=:equal, lc=:green, xlims = (-10, 110), ylims = (-10, 10), title =  "ux = $(round(states[6]; digits = 2)) m/s")
-        
     for obs_idx = 1:1:size(obs_setting, 1)
-        h = plot!(h, circleShape(obs_setting[obs_idx][1], obs_setting[obs_idx][2], obs_setting[obs_idx][3]), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 1.0)
+        h = plot!(h, circleShape(obs_setting[obs_idx][1], obs_setting[obs_idx][2], obs_setting[obs_idx][3] - 1), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 1.0)
+		h = plot!(h, circleShape(obs_setting[obs_idx][1], obs_setting[obs_idx][2], obs_setting[obs_idx][3]), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 0.2)
     end
-	h = plot!(h, circleShape(DWA.s.goal[1], DWA.s.goal[2], 7.2), seriestype = [:shape,], ;w = 0.5, c=:green, linecolor = :green, legend = false, fillalpha = 1.0)
 
+	h = plot!(h, circleShape(DWA.s.goal[1], DWA.s.goal[2], 7.2), seriestype = [:shape,], ;w = 0.5, c=:green, linecolor = :green,framestyle = :box, legend = false,xlims = (-10, 110), ylims = (-10, 10), fillalpha = 1.0, xlabel = "X (m)", ylabel = "Y (m)", xtickfontsize=14,ytickfontsize=14,xguidefontsize=14,yguidefontsize=14)
+
+	h = plot!(states_his[2,:], states_his[3,:], aspect_ratio=:equal, lc=:green, lw = 2, xlims = (-10, 110), ylims = (-10, 10))
     for candi_path = 1:1:size(DWA.p.TrajectoryCollection,1)
-		if DWA.p.TrajectoryCollection[candi_path].Feasibility == true
+		# if DWA.p.TrajectoryCollection[candi_path].Feasibility == true
         	h = plot!(h, DWA.p.TrajectoryCollection[candi_path].Trajectory[:,1], DWA.p.TrajectoryCollection[candi_path].Trajectory[:,2],aspect_ratio=:equal, lc=:gray, legend=false, alpha = 0.1)
-		end
+		# end
 	end
-    h = plot!(h, DWA.r.Traj[:,1], DWA.r.Traj[:,2],aspect_ratio=:equal, lc=:red, legend=false)
-
+    h = plot!(h, DWA.r.Traj[:,1], DWA.r.Traj[:,2],aspect_ratio=:equal, lw = 2, lc=:red, legend=false)
+	h = plot!(h, vehicleShape(states_his[2, end],states_his[3, end],states_his[6, end]),
+	seriestype = [:shape],
+	lw = 0.5,
+	c = :gold2,
+	linecolor = :black,
+	fillalpha = 1
+	)
     return h
 
+end
+
+function vehicleShape(x,y,yaw)
+	c = cos(yaw)
+	s = sin(yaw)
+	R = [c -s; s c]
+	# nodes = [0 0 -3.61 -3.61 0 0; 0 0.78 0.78 -0.78 -0.78 0]
+	nodes = [0 0 -2.712 -2.712 0 0; 0 0.78 0.78 -0.78 -0.78 0]
+	rotatedNodes = R * nodes
+	x .+ rotatedNodes[1,:], y .+ rotatedNodes[2,:]
 end

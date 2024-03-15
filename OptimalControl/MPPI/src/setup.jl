@@ -7,9 +7,9 @@ function defineMPPI(
     X0 = fill(NaN,numStates),
     goal = fill(NaN,2), 
     SamplingNumber::Int64 = 500,
-    GridNum::Vector{Int64} = [100, 100],
+    Σ = I(numControls),
     N::Int64 = 15,
-    T::Float64 = 3,
+    T::Float64 = 3.0,
     XL = fill(NaN,numStates),
     XU = fill(NaN,numStates),
     CL = fill(NaN,numControls),
@@ -53,7 +53,7 @@ function defineMPPI(
     MPPI.s.dt = T/N
     MPPI.s.SamplingNumber = SamplingNumber
     MPPI.s.NominalControl = zeros(MPPI.s.N, MPPI.s.numControls)
-    MPPI.s.Σ = Diagonal(ones(numControls)) * 0.1
+    MPPI.s.Σ = Σ
     MPPI.s.MultivariantNormal = MvNormal(zeros(MPPI.s.numControls), MPPI.s.Σ)
     return MPPI
 end
