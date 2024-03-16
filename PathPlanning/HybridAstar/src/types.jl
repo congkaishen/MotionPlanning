@@ -5,6 +5,8 @@ using ProgressMeter
 using LinearAlgebra
 using Plots
 using Interpolations
+
+
 @with_kw mutable struct HybridAstarNode
     parent::Union{Int, Nothing}= nothing
     states::Vector{Float64} = Vector{Float64}[]

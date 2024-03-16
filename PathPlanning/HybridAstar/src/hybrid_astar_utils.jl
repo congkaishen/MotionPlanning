@@ -1,3 +1,7 @@
+include("types.jl")
+include("setup.jl")
+include("../../ReedsSheppsCurves/src/ReedsSheppsUtils.jl")
+
 function plotRes(hybrid_astar::HybridAstarSearcher)
     title_string = "Iterations: $(hybrid_astar.p.loop_count), Expansions: $(length(hybrid_astar.p.nodes_collection)), Open List: $(size(hybrid_astar.p.open_list, 1))"
     h = plot(size = [600, 600], title = title_string, xlim=(hybrid_astar.s.stbound[1, 1]-2, hybrid_astar.s.stbound[1, 2]+2), ylim=(hybrid_astar.s.stbound[2, 1]-2, hybrid_astar.s.stbound[2, 2]+2))
