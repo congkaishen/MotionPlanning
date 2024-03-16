@@ -40,7 +40,6 @@ function plotRes(hybrid_astar::HybridAstarSearcher)
     return h
 end
 
-
 function getVehAnim(hybrid_astar::HybridAstarSearcher)
     anim = Plots.Animation()
     title_string = "Parking Replay"
@@ -70,7 +69,6 @@ function getVehAnim(hybrid_astar::HybridAstarSearcher)
         return nothing
     end
 end
-
 
 function retrievePath(hybrid_astar::HybridAstarSearcher)
     RSpath_final = hybrid_astar.r.RSpath_final
@@ -105,7 +103,6 @@ function retrievePath(hybrid_astar::HybridAstarSearcher)
     hybrid_astar.r.ψ_interp = ψ_interp
     hybrid_astar.r.tol_length = path_length[end]
 end
-
 
 function GetRectanglePts(block)
     # block is 5 element vector: x,y,ψ,l,w
@@ -178,7 +175,6 @@ function ConvexCollision(pts1, pts2)
     end
 end
 
-
 function block_collision_check(hybrid_astar::HybridAstarSearcher, path, block_list)
     sparcity_num = 5
     if size(path, 2) > sparcity_num
@@ -203,7 +199,6 @@ function block_collision_check(hybrid_astar::HybridAstarSearcher, path, block_li
     end
     return true
 end
-
 
 function circleShape(h,k,r)
     θ = LinRange(0, 2*π, 500)
@@ -233,7 +228,6 @@ function RS_connected(hybrid_astar::HybridAstarSearcher, current_node::HybridAst
     path = createActPath(cur_st, minR, opt_cmd)
     return block_collision_check( hybrid_astar, path, block_list), path
 end
-
 
 function planHybridAstar!(hybrid_astar::HybridAstarSearcher)
     t1 = time()
@@ -298,8 +292,6 @@ function planHybridAstar!(hybrid_astar::HybridAstarSearcher)
     return nothing
 end
 
-
-
 function InOpen(hybrid_astar::HybridAstarSearcher, current_node::HybridAstarNode)
     for node in hybrid_astar.p.open_list
         if current_node.index == node.index
@@ -309,7 +301,6 @@ function InOpen(hybrid_astar::HybridAstarSearcher, current_node::HybridAstarNode
     return false
 end
 
-
 function InClose(hybrid_astar::HybridAstarSearcher, current_node::HybridAstarNode)
     for node in hybrid_astar.p.closed_list
         if current_node.index == node.index
@@ -318,8 +309,6 @@ function InClose(hybrid_astar::HybridAstarSearcher, current_node::HybridAstarNod
     end
     return false
 end
-
-
 
 function Encode(hybrid_astar::HybridAstarSearcher, states)
     states_bounds = hybrid_astar.s.stbound
@@ -437,7 +426,6 @@ function FindNewNode(hybrid_astar::HybridAstarSearcher, current_node::HybridAsta
     push!(hybrid_astar.p.closed_list, current_node)
 end
 
-
 function check_bounds(hybrid_astar::HybridAstarSearcher, states)
     states_bounds = hybrid_astar.s.stbound
     for i in 1:2
@@ -447,7 +435,6 @@ function check_bounds(hybrid_astar::HybridAstarSearcher, states)
     end
     return true
 end
-
 
 function transform(init_st, states)
     res_states = zeros(size(states))
@@ -472,7 +459,6 @@ function transform(init_st, states)
 
     return res_states
 end
-
 
 function neighbor_origin(T, steer_set, gear_set) #init at [0,0,0] x,y,ψ
     Δt = 1e-2
