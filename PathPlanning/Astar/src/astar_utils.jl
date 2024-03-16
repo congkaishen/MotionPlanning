@@ -24,6 +24,8 @@ function plotRes(astar)
     end
     h = plot!(h, circleShape(start_pt[1],start_pt[2], 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:red, linecolor = :red, legend = false, fillalpha = 1.0)
 	h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 1), seriestype = [:shape,], ;w = 0.5, c=:green, linecolor = :green, legend = false, fillalpha = 1.0, framestyle = :box,xlim=(astar.s.actualbound[1]-2, astar.s.actualbound[2]+2), ylim=(astar.s.actualbound[3]-2, astar.s.actualbound[4]+2), title = title_string)
+    xlabel!("X [m]")
+    ylabel!("Y [m]")
     
     return h
 

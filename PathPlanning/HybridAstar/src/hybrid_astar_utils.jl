@@ -1,28 +1,109 @@
 function plotRes(hybrid_astar::HybridAstarSearcher)
-    h = plot()
+    title_string = "Iterations: $(hybrid_astar.p.loop_count), Expansions: $(length(hybrid_astar.p.nodes_collection)), Open List: $(size(hybrid_astar.p.open_list, 1))"
+    h = plot(size = [600, 600], title = title_string, xlim=(hybrid_astar.s.stbound[1, 1]-2, hybrid_astar.s.stbound[1, 2]+2), ylim=(hybrid_astar.s.stbound[2, 1]-2, hybrid_astar.s.stbound[2, 2]+2))
     h = PlotWall(h, Block2Pts(hybrid_astar.s.obstacle_list))
 
     if length(hybrid_astar.p.nodes_collection) > 1
         for (key, node) in hybrid_astar.p.nodes_collection
             cur_st = node.states
             arrowsize = 0.05
-            quiver!(h, [cur_st[1]], [cur_st[2]], quiver = ([arrowsize*cos(cur_st[3])], [arrowsize*sin(cur_st[3])]),color =:red, legend = false)
+            quiver!(h, [cur_st[1]], [cur_st[2]], quiver = ([arrowsize*cos(cur_st[3])], [arrowsize*sin(cur_st[3])]),color =:gray, legend = false)
         end
     end
 
-    if size(hybrid_astar.r.actualpath,1) >= 1
-        h = plot!(h, hybrid_astar.r.actualpath[1,:], hybrid_astar.r.actualpath[2,:])
+    if size(hybrid_astar.r.actualpath, 1) >= 1
+        h = plot!(h, hybrid_astar.r.actualpath[1,:], hybrid_astar.r.actualpath[2,:], color =:green, linewidth = 5)
+    else
+        if size(hybrid_astar.r.RSpath_final, 1) >= 1
+            h = plot!(h, hybrid_astar.r.RSpath_final[1,:], hybrid_astar.r.RSpath_final[2,:], color =:green)
 
-        for i in 1:size(hybrid_astar.r.hybrid_astar_states, 2)
-            cur_st = hybrid_astar.r.hybrid_astar_states[:, i]
-            arrowsize = 0.1
-            quiver!(h, [cur_st[1]], [cur_st[2]], quiver = ([arrowsize*cos(cur_st[3])], [arrowsize*sin(cur_st[3])]),color =:green, legend = false)
+            for i in 1:size(hybrid_astar.r.hybrid_astar_states, 2)
+                cur_st = hybrid_astar.r.hybrid_astar_states[:, i]
+                arrowsize = 0.1
+                quiver!(h, [cur_st[1]], [cur_st[2]], quiver = ([arrowsize*cos(cur_st[3])], [arrowsize*sin(cur_st[3])]),color =:green, legend = false)
+                display(h)
+                sleep(0.1)
+            end
+        end
+    end
+
+    cur_st = hybrid_astar.s.starting_states
+    arrowsize = 0.1
+    quiver!(h, [cur_st[1]], [cur_st[2]], quiver = ([arrowsize*cos(cur_st[3])], [arrowsize*sin(cur_st[3])]),color =:red, legend = false, linewidth = 5)
+
+    cur_st = hybrid_astar.s.ending_states
+    arrowsize = 0.1
+    quiver!(h, [cur_st[1]], [cur_st[2]], quiver = ([arrowsize*cos(cur_st[3])], [arrowsize*sin(cur_st[3])]),color =:green, legend = false, linewidth = 5)
+
+    xlabel!("X [m]")
+    ylabel!("Y [m]")
+    return h
+end
+
+
+function getVehAnim(hybrid_astar::HybridAstarSearcher)
+    anim = Plots.Animation()
+    title_string = "Parking Replay"
+    h = plot(size = [600, 600], title = title_string, xlim=(hybrid_astar.s.stbound[1, 1]-2, hybrid_astar.s.stbound[1, 2]+2), ylim=(hybrid_astar.s.stbound[2, 1]-2, hybrid_astar.s.stbound[2, 2]+2))
+    h = PlotWall(h, Block2Pts(hybrid_astar.s.obstacle_list))
+    if size(hybrid_astar.r.actualpath, 1) >= 1
+        x_interp = hybrid_astar.r.x_interp
+        y_interp = hybrid_astar.r.y_interp
+        ψ_interp = hybrid_astar.r.ψ_interp
+        steps = 100
+        traver_s_list = LinRange(0, hybrid_astar.r.tol_length, steps)
+        for i in 1:1:size(traver_s_list, 1)-1
+            traver_s = traver_s_list[i]
+            traver_s_next = traver_s_list[i+1] 
+            travel_list = LinRange(traver_s, traver_s_next, 2)
+            h = plot!(h, x_interp(travel_list), y_interp(travel_list), color =:green, linewidth = 5)
+            veh_block = [x_interp(travel_list[end]), y_interp(travel_list[end]), ψ_interp(travel_list[end]), hybrid_astar.s.vehicle_size[1]/2,  hybrid_astar.s.vehicle_size[2]/2]
+            veh_pts = GetRectanglePts(veh_block)
+            h = PlotVehicle(h, veh_pts)
             display(h)
             sleep(0.1)
-        end
+            Plots.frame(anim)
+        end        
+        gif(anim, "./gifholder/VehAnim.gif", fps = Int32(ceil(1/(hybrid_astar.r.tol_length/steps/1))))
+    else
+        println("No solution!!")
+        return nothing
     end
+end
 
-    return h
+
+function retrievePath(hybrid_astar::HybridAstarSearcher)
+    RSpath_final = hybrid_astar.r.RSpath_final
+    states_ori = hybrid_astar.r.hybrid_astar_states
+    states = transpose([reverse!(states_ori[1, :]) reverse!(states_ori[2, :]) reverse!(states_ori[3, :])])
+    actualpath = Matrix{Float64}[]
+    actualpath = hybrid_astar.s.starting_states
+
+    for st_idx in 1:1:size(states,2)-1
+        cur_st = states[:,st_idx]
+        goal_st = states[:,st_idx+1]
+        minR = hybrid_astar.s.minR
+        norm_states = changeBasis(cur_st, goal_st, minR)
+        opt_cmd, opt_cost, _, _ = allpath(norm_states)
+        actualpath = [actualpath createActPath(cur_st, minR, opt_cmd)]
+    end
+    actualpath = [actualpath RSpath_final]
+    hybrid_astar.r.actualpath = actualpath
+
+
+    actualpts = hybrid_astar.r.actualpath[1:2, :]
+    ds = sqrt.(sum((actualpts[:,2:end] - actualpts[:,1:end-1]).^2, dims = 1))
+    path_length = zeros(size(actualpts, 2))
+    for i in 2:1:size(actualpts, 2)
+        path_length[i] = path_length[i-1] + ds[i-1]
+    end
+    x_interp = linear_interpolation(path_length, hybrid_astar.r.actualpath[1,:])
+    y_interp = linear_interpolation(path_length, hybrid_astar.r.actualpath[2,:])
+    ψ_interp = linear_interpolation(path_length, hybrid_astar.r.actualpath[3,:])
+    hybrid_astar.r.x_interp = x_interp
+    hybrid_astar.r.y_interp = y_interp
+    hybrid_astar.r.ψ_interp = ψ_interp
+    hybrid_astar.r.tol_length = path_length[end]
 end
 
 
@@ -57,7 +138,6 @@ function PlotVehicle(h, pts)
     h = plot!(h, pts[1,:], pts[2,:], linestyle=:dash, color =:green,  legend = false)
     return h
 end
-
 
 function SeparatingAxisTheorem(pts_base, pts_other)
     # false means collision
@@ -99,8 +179,8 @@ function ConvexCollision(pts1, pts2)
 end
 
 
-function block_collision_check(path, block_list)
-    sparcity_num = 1
+function block_collision_check(hybrid_astar::HybridAstarSearcher, path, block_list)
+    sparcity_num = 5
     if size(path, 2) > sparcity_num
         x = path[1, 1:sparcity_num:end]
         y = path[2, 1:sparcity_num:end]
@@ -111,7 +191,7 @@ function block_collision_check(path, block_list)
         ψ = path[3,1]
     end
 
-    veh_his = [[x[i], y[i], modπ(ψ[i]), 2/2, 1/2] for i in 1:size(x,1)]
+    veh_his = [[x[i], y[i], modπ(ψ[i]), hybrid_astar.s.vehicle_size[1]/2, hybrid_astar.s.vehicle_size[2]/2] for i in 1:size(x,1)]
     wall_pts = Block2Pts(block_list) # 2x5xNobs
     veh_pts = Block2Pts(veh_his)
     for i in 1:size(wall_pts, 3)
@@ -123,7 +203,6 @@ function block_collision_check(path, block_list)
     end
     return true
 end
-
 
 
 function circleShape(h,k,r)
@@ -152,66 +231,45 @@ function RS_connected(hybrid_astar::HybridAstarSearcher, current_node::HybridAst
     norm_states = changeBasis(cur_st, goal_st, minR)
     opt_cmd, opt_cost, _, _ = allpath(norm_states)
     path = createActPath(cur_st, minR, opt_cmd)
-    return block_collision_check(path, block_list), path
+    return block_collision_check( hybrid_astar, path, block_list), path
 end
-
-
-# function block_outside(states, block_info)
-#     x = states[1]
-#     y = states[2]
-#     block_center_x = block_info[1]
-#     block_center_y = block_info[2]
-#     block_yaw = block_info[3]
-#     block_length = block_info[4]
-#     block_width = block_info[5]
-#     p =4.0
-#     return -((((cos(block_yaw) * (x-block_center_x) + sin(block_yaw) * (y-block_center_y))/block_length )^p + ( (-sin(block_yaw) * (x-block_center_x) + cos(block_yaw) * (y-block_center_y))/(block_width) )^p + 0.01)^(1/p) ) + 1 <= 0 
-# end
-
-# function block_outside(states, block_info)
-#     x = states[1]
-#     y = states[2]
-#     block_center_x = block_info[1]
-#     block_center_y = block_info[2]
-#     block_yaw = 0.0
-#     block_length = block_info[3]
-#     block_width = block_info[3]
-#     p =2.0
-#     return -((((cos(block_yaw) * (x-block_center_x) + sin(block_yaw) * (y-block_center_y))/block_length )^p + ( (-sin(block_yaw) * (x-block_center_x) + cos(block_yaw) * (y-block_center_y))/(block_width) )^p + 0.01)^(1/p) ) + 1 <= 0 
-# end
-
 
 
 function planHybridAstar!(hybrid_astar::HybridAstarSearcher)
     t1 = time()
     push!(hybrid_astar.p.open_list, hybrid_astar.p.starting_node)
+
+    if hybrid_astar.s.make_gif anim = Plots.Animation() end
     while !isempty(hybrid_astar.p.open_list)
         hybrid_astar.p.loop_count = hybrid_astar.p.loop_count + 1
 
         sort!(hybrid_astar.p.open_list)
         current_node = popfirst!(hybrid_astar.p.open_list)
-
-        h = plotRes(hybrid_astar)
-        display(h)
-        sleep(0.001)
-
-
         termi_flag, final_path = RS_connected(hybrid_astar, current_node)
+
+        if (hybrid_astar.s.draw_fig || hybrid_astar.s.make_gif) && mod(hybrid_astar.p.loop_count, 10)==1
+            h = plotRes(hybrid_astar)
+            if hybrid_astar.s.draw_fig
+                display(h)
+                sleep(0.001)
+            end
+
+            if hybrid_astar.s.make_gif
+                Plots.frame(anim)
+            end
+        end
+
         if termi_flag
-            actualpath = final_path
-
+            RSpath_final = final_path
             println("end code")
-            # current_node = hybrid_astar.p.nodes_collection[current_node.parent]
-
             hybrid_astar_states = current_node.states
             while (current_node.parent != nothing)&&(current_node.index != hybrid_astar.s.starting_index)
                 current_node = hybrid_astar.p.nodes_collection[current_node.parent]
                 hybrid_astar_states = [hybrid_astar_states current_node.states]
             end
-            
             hybrid_astar.r.hybrid_astar_states = hybrid_astar_states
-            hybrid_astar.r.actualpath  = actualpath
-
+            hybrid_astar.r.RSpath_final  = RSpath_final
+            retrievePath(hybrid_astar)
             @goto escape_label
         end
 
@@ -219,6 +277,22 @@ function planHybridAstar!(hybrid_astar::HybridAstarSearcher)
     end
 
     @label escape_label
+
+    if (hybrid_astar.s.draw_fig || hybrid_astar.s.make_gif)
+        h = plotRes(hybrid_astar)
+        if hybrid_astar.s.draw_fig
+            display(h)
+            sleep(0.001)
+        end
+        if hybrid_astar.s.make_gif
+            Plots.frame(anim)
+        end
+    end
+    if hybrid_astar.s.make_gif 
+        gif(anim, "./gifholder/HybridAstar.gif", fps = 2) 
+        getVehAnim(hybrid_astar)
+    end
+
     t2 = time()
     hybrid_astar.r.planning_time = t2 - t1
     return nothing
@@ -286,7 +360,7 @@ end
 function dg_cost(hybrid_astar::HybridAstarSearcher,  path)
     #### add obs collision
     block_list = hybrid_astar.s.obstacle_list
-    if !block_collision_check(path, block_list)
+    if !block_collision_check(hybrid_astar, path, block_list)
         return Inf
     end
     return hybrid_astar.s.expand_time

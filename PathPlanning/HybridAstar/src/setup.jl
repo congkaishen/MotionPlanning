@@ -1,6 +1,7 @@
 ################################################################################## HybridAstar Setup ##########################################################################################
 
 function defineHybridAstar(
+    vehicle_size = [2, 1],
     gear_set = [1, -1],
     steer_set = collect(LinRange(-1,1,7)),
     minR = 1.0,
@@ -10,8 +11,11 @@ function defineHybridAstar(
     starting_real = [10.0,-5.0,0.0],
     ending_real = [-5.0,-5.0,0.0],
     draw_fig = false,
+    make_gif = false,
     )::HybridAstarSearcher
     hybrid_astar = HybridAstarSearcher();
+
+    hybrid_astar.s.vehicle_size = vehicle_size
     hybrid_astar.s.gear_set = gear_set
     hybrid_astar.s.steer_set = steer_set
     
@@ -38,6 +42,7 @@ function defineHybridAstar(
     hybrid_astar.s.starting_index = st_index
     hybrid_astar.p.starting_node = HybridAstarNode(nothing, hybrid_astar.s.starting_states, st_index, 0, 0, 0)
     hybrid_astar.s.draw_fig = draw_fig
+    hybrid_astar.s.make_gif = make_gif
 
     hybrid_astar.s.states_candi,  hybrid_astar.s.paths_candi = neighbor_origin(expand_time, steer_set, gear_set)
 
