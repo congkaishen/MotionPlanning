@@ -35,7 +35,7 @@ function defineHybridAstar(
     hybrid_astar.s.starting_states = regulate_states(hybrid_astar, starting_real)
     hybrid_astar.s.ending_states = regulate_states(hybrid_astar, ending_real)
     st_index = Encode(hybrid_astar, hybrid_astar.s.starting_states)
-    
+    hybrid_astar.s.starting_index = st_index
     hybrid_astar.p.starting_node = HybridAstarNode(nothing, hybrid_astar.s.starting_states, st_index, 0, 0, 0)
     hybrid_astar.s.draw_fig = draw_fig
 

@@ -24,7 +24,7 @@ for i = 1:1:size(obs_location_temp, 1)
     obs_location[i] = obs_location_temp[i, :]
 end
 
-draw_fig = true
+draw_fig = false
 make_gif = false
 if make_gif
     if isdir("./gifholder")

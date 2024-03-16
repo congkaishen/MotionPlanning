@@ -30,6 +30,7 @@ Base.isless(a::HybridAstarNode, b::HybridAstarNode) = isless(a.f, b.f)
     draw_fig::Bool = false
     minR::Float64 = 1.0
     expand_time::Float64 = 1.0
+    starting_index::Int64 = 0
 end
 
 @with_kw mutable struct HybridAstarPlanner
