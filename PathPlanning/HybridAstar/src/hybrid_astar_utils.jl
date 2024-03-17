@@ -44,6 +44,26 @@ function plotRes(hybrid_astar::HybridAstarSearcher)
     return h
 end
 
+
+function plotPlannerPath(hybrid_astar::HybridAstarSearcher)
+    title_string = "Iterations: $(hybrid_astar.p.loop_count), Expansions: $(length(hybrid_astar.p.nodes_collection)), Open List: $(size(hybrid_astar.p.open_list, 1))"
+    h = plot(size = [600, 600], title = title_string, xlim=(hybrid_astar.s.stbound[1, 1]-2, hybrid_astar.s.stbound[1, 2]+2), ylim=(hybrid_astar.s.stbound[2, 1]-2, hybrid_astar.s.stbound[2, 2]+2))
+    h = PlotWall(h, Block2Pts(hybrid_astar.s.obstacle_list))
+
+    h = plot!(h, hybrid_astar.r.actualpath[1,:], hybrid_astar.r.actualpath[2,:], color =:green, linewidth = 5, alpha = 0.2)
+    cur_st = hybrid_astar.s.starting_states
+    arrowsize = 0.1
+    quiver!(h, [cur_st[1]], [cur_st[2]], quiver = ([arrowsize*cos(cur_st[3])], [arrowsize*sin(cur_st[3])]),color =:red, legend = false, linewidth = 5)
+
+    cur_st = hybrid_astar.s.ending_states
+    arrowsize = 0.1
+    quiver!(h, [cur_st[1]], [cur_st[2]], quiver = ([arrowsize*cos(cur_st[3])], [arrowsize*sin(cur_st[3])]),color =:green, legend = false, linewidth = 5)
+
+    xlabel!("X [m]")
+    ylabel!("Y [m]")
+    return h
+end
+
 function getVehAnim(hybrid_astar::HybridAstarSearcher)
     anim = Plots.Animation()
     title_string = "Parking Replay"
@@ -53,7 +73,7 @@ function getVehAnim(hybrid_astar::HybridAstarSearcher)
         x_interp = hybrid_astar.r.x_interp
         y_interp = hybrid_astar.r.y_interp
         ψ_interp = hybrid_astar.r.ψ_interp
-        steps = 100
+        steps = 50
         traver_s_list = LinRange(0, hybrid_astar.r.tol_length, steps)
         for i in 1:1:size(traver_s_list, 1)-1
             traver_s = traver_s_list[i]
@@ -99,9 +119,17 @@ function retrievePath(hybrid_astar::HybridAstarSearcher)
     for i in 2:1:size(actualpts, 2)
         path_length[i] = path_length[i-1] + ds[i-1]
     end
-    x_interp = linear_interpolation(path_length, hybrid_astar.r.actualpath[1,:])
-    y_interp = linear_interpolation(path_length, hybrid_astar.r.actualpath[2,:])
-    ψ_interp = linear_interpolation(path_length, hybrid_astar.r.actualpath[3,:])
+    x_interp_dense = linear_interpolation(path_length, hybrid_astar.r.actualpath[1,:])
+    y_interp_dense = linear_interpolation(path_length, hybrid_astar.r.actualpath[2,:])
+    ψ_interp_dense = linear_interpolation(path_length, hybrid_astar.r.actualpath[3,:])
+    # further sparce into 100 steps and reinterpolate
+    steps = 50
+    traver_s_list = LinRange(0, path_length[end], steps)
+    x_interp = linear_interpolation(traver_s_list, x_interp_dense(traver_s_list))
+    y_interp = linear_interpolation(traver_s_list, y_interp_dense(traver_s_list))
+    ψ_interp = linear_interpolation(traver_s_list, ψ_interp_dense(traver_s_list))
+
+
     hybrid_astar.r.x_interp = x_interp
     hybrid_astar.r.y_interp = y_interp
     hybrid_astar.r.ψ_interp = ψ_interp
@@ -110,6 +138,7 @@ end
 
 function GetRectanglePts(block)
     # block is 5 element vector: x,y,ψ,l,w
+    # order is UpLeft, LowerLeft, LowerRight, UpperRight, back to UpLeft
     ox = block[1]
     oy = block[2]
     ψ  = block[3]
@@ -132,6 +161,41 @@ function PlotWall(h, pts)
     for i in 1:size(pts,3)
         h = plot!(h, pts[1,:,i], pts[2,:,i], seriestype = [:shape,], color =:black, legend = false, aspect_ratio =:equal)
     end
+    return h
+end
+
+function PlotVehicleDetailed(h, veh_block, sa)
+    veh_x = veh_block[1]
+    veh_y = veh_block[2]
+    veh_ψ = veh_block[3]
+    veh_l = veh_block[4]
+    veh_w = veh_block[5]
+    veh_boundary = GetRectanglePts(veh_block)
+    tire_w = 0.1
+    tire_l = 0.2
+    # in Get rectangle 3=>LowerRight(right tire), 4=>UpperRight(left tire)
+    tire_left_block = [veh_boundary[1, 4], veh_boundary[2, 4], veh_ψ+sa, tire_l, tire_w ]
+    tire_left_boundary = GetRectanglePts(tire_left_block)
+    tire_right_block = [veh_boundary[1, 3], veh_boundary[2, 3], veh_ψ+sa, tire_l, tire_w ]
+    tire_right_boundary = GetRectanglePts(tire_right_block)
+    # in Get rectangle 1=>UpperLeft(rear left tire), 2=>Lowerleft(rear right tire)
+    tire_rleft_block = [veh_boundary[1, 1], veh_boundary[2, 1], veh_ψ, tire_l, tire_w ]
+    tire_rleft_boundary = GetRectanglePts(tire_rleft_block)
+    tire_rright_block = [veh_boundary[1, 2], veh_boundary[2, 2], veh_ψ, tire_l, tire_w ]
+    tire_rright_boundary = GetRectanglePts(tire_rright_block)
+
+    triangle = [veh_boundary[:,1] veh_boundary[:,2] (veh_boundary[:,3] .+ veh_boundary[:,4])./2 veh_boundary[:,5] ] 
+    
+
+    h = plot!(h, veh_boundary[1,:], veh_boundary[2,:], linestyle=:dash, color =:green,  legend = false)
+    h = plot!(h, tire_left_boundary[1,:], tire_left_boundary[2,:], seriestype = [:shape,], color =:gray,  legend = false)
+    h = plot!(h, tire_right_boundary[1,:], tire_right_boundary[2,:], seriestype = [:shape,], color =:gray,  legend = false)
+    h = plot!(h, tire_rleft_boundary[1,:], tire_rleft_boundary[2,:], seriestype = [:shape,], color =:black,  legend = false)
+    h = plot!(h, tire_rright_boundary[1,:], tire_rright_boundary[2,:], seriestype = [:shape,], color =:black,  legend = false)
+    h = plot!(h, triangle[1,:], triangle[2,:], seriestype = [:shape,], color =:yellow,  legend = false)
+    h = plot!(h, veh_boundary[1, 3:4], veh_boundary[2, 3:4], color =:black, linewidth = 3,  legend = false)
+    h = plot!(h, veh_boundary[1, 1:2], veh_boundary[2, 1:2], color =:black, linewidth = 3,  legend = false)
+
     return h
 end
 
