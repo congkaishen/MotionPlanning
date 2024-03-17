@@ -10,6 +10,7 @@ function defineHybridAstar(
     stbound = [-15 15; -15 5; -pi pi],
     starting_real = [10.0,-5.0,0.0],
     ending_real = [-5.0,-5.0,0.0],
+    use_astar = false,
     draw_fig = false,
     make_gif = false,
     )::HybridAstarSearcher
@@ -41,6 +42,7 @@ function defineHybridAstar(
     st_index = Encode(hybrid_astar, hybrid_astar.s.starting_states)
     hybrid_astar.s.starting_index = st_index
     hybrid_astar.p.starting_node = HybridAstarNode(nothing, hybrid_astar.s.starting_states, st_index, 0, 0, 0)
+    hybrid_astar.s.use_astar = use_astar
     hybrid_astar.s.draw_fig = draw_fig
     hybrid_astar.s.make_gif = make_gif
 

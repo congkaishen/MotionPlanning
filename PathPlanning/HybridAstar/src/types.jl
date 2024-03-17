@@ -34,6 +34,7 @@ Base.isless(a::HybridAstarNode, b::HybridAstarNode) = isless(a.f, b.f)
     num_gear::Int32 = 0
     num_states::Int32 = 0
     num_neighbors::Int32 = 0
+    use_astar::Bool = false
     draw_fig::Bool = false
     make_gif::Bool = false
     minR::Float64 = 1.0

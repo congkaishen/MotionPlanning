@@ -1,15 +1,12 @@
-using Parameters
-using NearestNeighbors
-using ProgressMeter
-using LinearAlgebra
-using Plots
-using MAT
+include("src/astar_utils.jl")
 
 cd(@__DIR__)
+# starting_pose = [5, 0]
+# ending_pose = [0.0,1.0]
+# BoundPosition = [-5;10; 0;10;]
+# # obs_location = [[0.0, -1.0, 1.0], [-5.5/2, 2.7432/2, 1], [5.5/2, 2.7432/2, 1]]
+# obs_location = [[0.0, -1.0, 0.0, 5.5/2 + 1.0, 1.0], [-5.5/2, 2.7432/2, 0.0, 1.0, 2.7432/2], [5.5/2, 2.7432/2, 0.0, 1.0, 2.7432/2]]
 
-include("src/types.jl")
-include("src/setup.jl")
-include("src/astar_utils.jl")
 
 starting_pose = [0.0; 0.0]
 ending_pose = [120.0; 120.0]

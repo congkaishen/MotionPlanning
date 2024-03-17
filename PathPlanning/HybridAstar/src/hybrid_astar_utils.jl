@@ -1,7 +1,9 @@
 include("types.jl")
 include("setup.jl")
+include("../../Astar/src/astar_utils.jl")
 include("../../ReedsSheppsCurves/src/ReedsSheppsUtils.jl")
 include("../../CollisionDetection/src/utils.jl")
+
 
 function plotRes(hybrid_astar::HybridAstarSearcher)
     title_string = "Iterations: $(hybrid_astar.p.loop_count), Expansions: $(length(hybrid_astar.p.nodes_collection)), Open List: $(size(hybrid_astar.p.open_list, 1))"
@@ -365,6 +367,22 @@ function rs_heuristic(hybrid_astar::HybridAstarSearcher,   cur_st)
     return cost
 end
 
+function astar_heuristic(hybrid_astar::HybridAstarSearcher,   cur_st)
+    if hybrid_astar.s.use_astar
+        goal_st = hybrid_astar.s.ending_states
+        BoundPosition = [hybrid_astar.s.stbound[1,1]; hybrid_astar.s.stbound[1,2];hybrid_astar.s.stbound[2,1]; hybrid_astar.s.stbound[2,2]]
+        astar = defineAstar(BoundPosition, [11, 11],  cur_st[1:2], goal_st[1:2], false, false)
+        defineAstarobs!(astar, hybrid_astar.s.obstacle_list)
+        planAstar!(astar)
+        cost = astar.r.final_cost
+    else
+        cost = 0
+    end
+    return cost
+end
+
+
+
 function FindNewNode(hybrid_astar::HybridAstarSearcher, current_node::HybridAstarNode)
     cur_idx = current_node.index
     cur_st = current_node.states
@@ -393,7 +411,8 @@ function FindNewNode(hybrid_astar::HybridAstarSearcher, current_node::HybridAsta
         end
 
         temp_g =current_node.g + travelcost
-        temp_h = rs_heuristic(hybrid_astar, nb_st)
+        temp_h = max(rs_heuristic(hybrid_astar, nb_st), astar_heuristic(hybrid_astar, nb_st))
+
         temp_f = temp_g + temp_h
 
         if haskey(hybrid_astar.p.nodes_collection, neighbor_idx)

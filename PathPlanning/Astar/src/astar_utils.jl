@@ -1,3 +1,15 @@
+using Parameters
+using NearestNeighbors
+using ProgressMeter
+using LinearAlgebra
+using Plots
+using MAT
+
+include("types.jl")
+include("setup.jl")
+include("../../CollisionDetection/src/utils.jl")
+
+
 function circleShape(h,k,r)
     θ = LinRange(0, 2*π, 500)
     h.+r*sin.(θ), k.+r*cos.(θ)
@@ -19,9 +31,17 @@ function plotRes(astar)
     if size(astar.r.actualpath, 1) > 2
         h = plot!(h, astar.r.actualpath[:,1], astar.r.actualpath[:,2],aspect_ratio=:equal, lc=:green, legend=false, linewidth=5)
     end
-    for obs_idx = 1:1:size(obs_setting, 1)
-        h = plot!(h, circleShape(obs_setting[obs_idx][1], obs_setting[obs_idx][2], obs_setting[obs_idx][3]), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 1.0)
+
+    if size(obs_setting[1], 1) == 3
+        for obs_idx = 1:1:size(obs_setting, 1)
+            h = plot!(h, circleShape(obs_setting[obs_idx][1], obs_setting[obs_idx][2], obs_setting[obs_idx][3]), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 1.0)
+        end
+    elseif size(obs_setting[1], 1) == 5
+        pts = Block2Pts(astar.s.obstacle_list)
+        h =PlotWall(h, pts)
     end
+
+
     h = plot!(h, circleShape(start_pt[1],start_pt[2], 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:red, linecolor = :red, legend = false, fillalpha = 1.0)
 	h = plot!(h, circleShape(goal_pt[1], goal_pt[2], 1), seriestype = [:shape,], ;w = 0.5, c=:green, linecolor = :green, legend = false, fillalpha = 1.0, framestyle = :box,xlim=(astar.s.actualbound[1]-2, astar.s.actualbound[2]+2), ylim=(astar.s.actualbound[3]-2, astar.s.actualbound[4]+2), title = title_string)
     xlabel!("X [m]")
@@ -85,6 +105,7 @@ function planAstar!(astar::AstarSearcher)
         end
 
         if current_node.position == astar.s.ending_pos
+            astar.r.final_cost = current_node.g
             astarpath = astar.s.ending_pos
             current_node = astar.p.nodes_collection[current_node.parent]
             while current_node != nothing
@@ -231,11 +252,27 @@ end
 function checkObsSafety(astar, position_val)
     flag = true
     transferred_position_val = TransferCoordinate(astar, position_val)
-    for i = 1:size(astar.s.obstacle_list, 1)
-        if (transferred_position_val[1] - astar.s.obstacle_list[i][1])^2 + (transferred_position_val[2] - astar.s.obstacle_list[i][2])^2 < astar.s.obstacle_list[i][3]^2
-            flag = false
-            break;
+
+    if size(astar.s.obstacle_list[1], 1) == 3 
+        for i = 1:size(astar.s.obstacle_list, 1)
+            if (transferred_position_val[1] - astar.s.obstacle_list[i][1])^2 + (transferred_position_val[2] - astar.s.obstacle_list[i][2])^2 < astar.s.obstacle_list[i][3]^2
+                flag = false
+                break;
+            end
+        end
+
+    elseif size(astar.s.obstacle_list[1], 1) == 5
+        cur_pt = transferred_position_val[1:2]
+        epsilon =1e-1
+        mypts = [[cur_pt[1];cur_pt[2]+epsilon] [cur_pt[1]-epsilon;cur_pt[2]] [cur_pt[1]+epsilon;cur_pt[2]] [cur_pt[1];cur_pt[2]+epsilon]]
+        pts = Block2Pts(astar.s.obstacle_list)
+        for i = 1:size(pts, 3)
+            if !ConvexCollision(pts[:,:,i], mypts)
+                flag = false
+                break;
+            end
         end
     end
+
     return flag
 end
