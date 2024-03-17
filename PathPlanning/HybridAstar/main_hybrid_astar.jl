@@ -9,13 +9,13 @@ include("src/hybrid_astar_utils.jl")
 # ending_real = [15, 0.0, 0.0]
 # block_info = [[0.0, 0.0, 0.0, 5, 5]]
 
-starting_real = [6, 0, -pi/2]
+starting_real = [6, 0, pi/2]
 ending_real = [0.0,1.0, pi/2]
 block_info = [[0.0, -1.0, 0.0, 5.5/2 + 1.0, 1.0], [-5.5/2, 2.7432/2, 0.0, 1.0, 2.7432/2], [5.5/2, 2.7432/2, 0.0, 1.0, 2.7432/2]]
 # block_info = [[0.0, -1.0, 0.0, 5.5/2 + 1.0, 1.0], [-5.5/2, 5/2, 0.0, 1.0, 5/2], [5.5/2, 5/2, 0.0, 1.0, 5/2]]
 ############# The setting here influence discretization ############# 
-vehicle_size = [2, 1]
-max_δf = pi/8
+vehicle_size = [3, 2]
+max_δf = pi/6
 
 minR = vehicle_size[1]/tan(max_δf)
 gear_set = [1, -1]
