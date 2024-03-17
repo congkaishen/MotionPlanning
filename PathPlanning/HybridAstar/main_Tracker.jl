@@ -42,7 +42,40 @@ end
 
 
 
+############ The main begins from here ############ 
 
+# You can set plan_path to be false, so that you can just focus on tracking
+# BUT!!!, you have to set it as true in the first run to get a reference path to play with
+plan_path = true
+###########################################
+if plan_path
+    include("main_hybrid_astar.jl")
+else
+    try
+        ismissing(hybrid_astar)
+    catch
+        println("Need to plan a path first!")
+        println("Please set plan_path to be true")
+        sleep(1)
+        exit()
+    end
+
+    if  ismissing(hybrid_astar)
+        println("Need to plan a path first!")
+        println("Please set plan_path to be true")
+        sleep(1)
+        exit()
+    else
+        if size(hybrid_astar.r.actualpath, 1) <= 1
+            println("Can't find a path")
+            sleep(1)
+            exit()
+        end
+    end
+end
+
+
+cd(@__DIR__)
 ############ Assume the main has already run, you have the hybrid_astar planned ############ 
 refined_length = LinRange(0, hybrid_astar.r.tol_length, 1000)
 # in hybrid A* speed is assumed to be normalized to 1
@@ -54,7 +87,7 @@ ref_pts = [x_ref y_ref]
 
 veh_length = vehicle_size[1]
 veh_width = vehicle_size[2]
-max_sa = pi/6 # let the maximum steering a little bit larger than the planner(or do the opposite in planning for the safety margin)
+max_sa = max_δf + 0.1 # let the maximum steering a little bit larger than the planner(or do the opposite in planning for the safety margin)
 veh_param = [veh_length, veh_width, max_sa]
 
 
