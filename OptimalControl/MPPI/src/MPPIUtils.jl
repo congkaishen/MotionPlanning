@@ -125,7 +125,6 @@ function ObstacleEvaluation(MPPI::MPPISearcher, states)
         if sum((states[1:2]-obstacle_list[obs_idx][1:2]).^2)<=obstacle_list[obs_idx][3]^2
             constraint = 0
 			cost_value = cost_value + 10000.0*712.5
-            # cost_value = cost_value + MPPI.s.SlackPenalty * abs((sqrt(sum((states[1:2]-obstacle_list[obs_idx][1:2]).^2)) - obstacle_list[obs_idx][3]))
         end
     end
 

@@ -4,11 +4,11 @@ function dynamics(states, ctrl)
     M           = 2020
     Izz         = 4095
     g           = 9.81
-    mu          = 0.8
+    mu          = 1.0
     KFZF        = 1018.28
     KFZR        = 963.34
     KFZX        = 186.22
-    Tire_par    = [-4.8543,1.4376,1.2205,0.1556,-0.0023,41.3705]
+    Tire_par    = [-10.4,1.3,1.0,0.1556,-0.0023,41.3705]
 
     B           = Tire_par[1]/mu; 
     C           = Tire_par[2] 
@@ -21,13 +21,13 @@ function dynamics(states, ctrl)
     v           = states[3]
     r           = states[4]
     psi         = states[5]
-    ux          = states[6]
-    sa          = states[7]
+    sa          = states[6]
     sr          = ctrl[1]
-    ax          = ctrl[2]
 
-    FZF         = 2*(KFZF * g - (ax - r * v) * KFZX)
-    FZR         = 2*(KFZR * g + (ax- r * v) * KFZX)
+    ux = 30
+
+    FZF         = 2* KFZF * g
+    FZR         = 2* KFZR * g 
     alpha_f     = atan((v + la * r) / (ux + 0.01)) - sa
     alpha_r     = atan((v - lb * r) / (ux + 0.01))
 
@@ -41,8 +41,7 @@ function dynamics(states, ctrl)
     dpsi        = r
     dv          = (FY1 + FY2) / M -  r * ux
     dr          = (FY1 * la - FY2 * lb) / Izz
-    du          = ax
     dsa         = sr
-    dstates     = [dx dy dv dr dpsi du dsa]
+    dstates     = [dx dy dv dr dpsi dsa]
     return dstates
 end

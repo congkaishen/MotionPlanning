@@ -2,7 +2,7 @@ include("src/MPPIUtils.jl")
 
 using Interpolations
 using Plots
-
+using Tables, CSV
 
 X0 = [0, 0, 0, 0, 0, 5, 0]
 XL = [-10, -20, -2, -pi/2,  -pi/2, 1, -pi/9]
@@ -11,7 +11,7 @@ CL = [-0.5, -2.5]
 CU = [0.5, 2.5]
 numStates = 7
 numControls = 2
-N = 20
+N = 15
 T = 3.0
 Δt = T/N
 
