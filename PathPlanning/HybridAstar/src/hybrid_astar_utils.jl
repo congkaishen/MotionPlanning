@@ -82,7 +82,7 @@ function getVehAnim(hybrid_astar::HybridAstarSearcher)
             traver_s_next = traver_s_list[i+1] 
             travel_list = LinRange(traver_s, traver_s_next, 2)
             h = plot!(h, x_interp(travel_list), y_interp(travel_list), color =:green, linewidth = 5)
-            veh_block = [x_interp(travel_list[end]), y_interp(travel_list[end]), ψ_interp(travel_list[end]), hybrid_astar.s.vehicle_size[1]/2,  hybrid_astar.s.vehicle_size[2]/2]
+            veh_block = [x_interp(travel_list[end]) + hybrid_astar.s.vehicle_size[1]/2*cos(ψ_interp(travel_list[end])), y_interp(travel_list[end])+ hybrid_astar.s.vehicle_size[1]/2*sin(ψ_interp(travel_list[end])), ψ_interp(travel_list[end]), hybrid_astar.s.vehicle_size[1]/2,  hybrid_astar.s.vehicle_size[2]/2]
             veh_pts = GetRectanglePts(veh_block)
             h = PlotVehicle(h, veh_pts)
             display(h)
@@ -138,40 +138,6 @@ function retrievePath(hybrid_astar::HybridAstarSearcher)
     hybrid_astar.r.tol_length = path_length[end]
 end
 
-function PlotVehicleDetailed(h, veh_block, sa)
-    veh_x = veh_block[1]
-    veh_y = veh_block[2]
-    veh_ψ = veh_block[3]
-    veh_l = veh_block[4]
-    veh_w = veh_block[5]
-    veh_boundary = GetRectanglePts(veh_block)
-    tire_w = 0.1
-    tire_l = 0.2
-    # in Get rectangle 3=>LowerRight(right tire), 4=>UpperRight(left tire)
-    tire_left_block = [veh_boundary[1, 4], veh_boundary[2, 4], veh_ψ+sa, tire_l, tire_w ]
-    tire_left_boundary = GetRectanglePts(tire_left_block)
-    tire_right_block = [veh_boundary[1, 3], veh_boundary[2, 3], veh_ψ+sa, tire_l, tire_w ]
-    tire_right_boundary = GetRectanglePts(tire_right_block)
-    # in Get rectangle 1=>UpperLeft(rear left tire), 2=>Lowerleft(rear right tire)
-    tire_rleft_block = [veh_boundary[1, 1], veh_boundary[2, 1], veh_ψ, tire_l, tire_w ]
-    tire_rleft_boundary = GetRectanglePts(tire_rleft_block)
-    tire_rright_block = [veh_boundary[1, 2], veh_boundary[2, 2], veh_ψ, tire_l, tire_w ]
-    tire_rright_boundary = GetRectanglePts(tire_rright_block)
-
-    triangle = [veh_boundary[:,1] veh_boundary[:,2] (veh_boundary[:,3] .+ veh_boundary[:,4])./2 veh_boundary[:,5] ] 
-    
-
-    h = plot!(h, veh_boundary[1,:], veh_boundary[2,:], linestyle=:dash, color =:green,  legend = false)
-    h = plot!(h, tire_left_boundary[1,:], tire_left_boundary[2,:], seriestype = [:shape,], color =:gray,  legend = false)
-    h = plot!(h, tire_right_boundary[1,:], tire_right_boundary[2,:], seriestype = [:shape,], color =:gray,  legend = false)
-    h = plot!(h, tire_rleft_boundary[1,:], tire_rleft_boundary[2,:], seriestype = [:shape,], color =:black,  legend = false)
-    h = plot!(h, tire_rright_boundary[1,:], tire_rright_boundary[2,:], seriestype = [:shape,], color =:black,  legend = false)
-    h = plot!(h, triangle[1,:], triangle[2,:], seriestype = [:shape,], color =:yellow,  legend = false)
-    h = plot!(h, veh_boundary[1, 3:4], veh_boundary[2, 3:4], color =:black, linewidth = 3,  legend = false)
-    h = plot!(h, veh_boundary[1, 1:2], veh_boundary[2, 1:2], color =:black, linewidth = 3,  legend = false)
-
-    return h
-end
 
 function block_collision_check(hybrid_astar::HybridAstarSearcher, path, block_list)
     sparcity_num = 5
@@ -185,7 +151,8 @@ function block_collision_check(hybrid_astar::HybridAstarSearcher, path, block_li
         ψ = path[3,1]
     end
 
-    veh_his = [[x[i], y[i], modπ(ψ[i]), hybrid_astar.s.vehicle_size[1]/2, hybrid_astar.s.vehicle_size[2]/2] for i in 1:size(x,1)]
+    #The dubin's need to take rear axle as (x,y), so we need to move middle x,y along longitudinal axis for half length
+    veh_his = [[x[i] + hybrid_astar.s.vehicle_size[1]/2*cos(ψ[i]), y[i]+ hybrid_astar.s.vehicle_size[1]/2*sin(ψ[i]), modπ(ψ[i]), hybrid_astar.s.vehicle_size[1]/2, hybrid_astar.s.vehicle_size[2]/2] for i in 1:size(x,1)]
     wall_pts = Block2Pts(block_list) # 2x5xNobs
     veh_pts = Block2Pts(veh_his)
     for i in 1:size(wall_pts, 3)
