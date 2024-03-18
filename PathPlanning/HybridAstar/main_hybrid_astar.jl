@@ -9,7 +9,8 @@ include("src/hybrid_astar_utils.jl")
 # ending_real = [15, 0.0, 0.0]
 # block_info = [[0.0, 0.0, 0.0, 5, 5]]
 
-starting_real = [6, 0, pi/2]
+#################### NOTE that we assume the point is located in the REAR AXLE!!! ####################
+starting_real = [6, 0, pi]
 ending_real = [0.0,1.0, pi/2]
 block_info = [[0.0, -1.0, 0.0, 5.5/2 + 1.0, 1.0], [-5.5/2, 2.7432/2, 0.0, 1.0, 2.7432/2], [5.5/2, 2.7432/2, 0.0, 1.0, 2.7432/2]]
 # block_info = [[0.0, -1.0, 0.0, 5.5/2 + 1.0, 1.0], [-5.5/2, 5/2, 0.0, 1.0, 5/2], [5.5/2, 5/2, 0.0, 1.0, 5/2]]
