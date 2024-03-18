@@ -5,10 +5,10 @@ function dynamics(states, ctrl)
     Izz         = 4095
     g           = 9.81
     mu          = 0.8
-    KFZF        = 1018.28
-    KFZR        = 963.34
+    KFZF        = 1018.28 / 2
+    KFZR        = 963.34 / 2
     KFZX        = 186.22
-    Tire_par    = [-4.8543,1.4376,1.2205,0.1556,-0.0023,41.3705]
+    Tire_par    = [-10.4,1.3,1.0,0.1556,-0.0023,41.3705]
 
     B           = Tire_par[1]/mu; 
     C           = Tire_par[2] 

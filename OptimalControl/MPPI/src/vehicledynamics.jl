@@ -1,14 +1,15 @@
 function VehicleDynamics(states, ctrl)
-    la          = 1.5521
-    lb          = 2.715-la
-    M           = 1.269e+03
-    Izz         = 1.620e+03
+    la          = 1.56
+    lb          = 1.64
+    M           = 2020
+    Izz         = 4095
     g           = 9.81
     mu          = 0.8
-    KFZF        = 297.9598
-    KFZR        = 391.1902
-    KFZX        = 289.5
-    Tire_par    = [-4.8543,1.4376,1.2205,0.1556,-0.0023,41.3705]
+    KFZF        = 1018.28 / 2
+    KFZR        = 963.34 / 2
+    KFZX        = 186.22
+    Tire_par    = [-10.4,1.3,1.0,0.1556,-0.0023,41.3705]
+
 
     B           = Tire_par[1]/mu; 
     C           = Tire_par[2] 
@@ -31,11 +32,14 @@ function VehicleDynamics(states, ctrl)
     alpha_f     = atan((v + la * r) / (ux + 0.01)) - sa
     alpha_r     = atan((v - lb * r) / (ux + 0.01))
 
-    X1_f        = min(max(B * (-alpha_f + Sh), -pi/2 + 0.001), pi/2 - 0.001)
-    FY1         = -(mu * FZF * Tire_par[3] * sin(C * atan(X1_f - E * (X1_f - atan(X1_f)))) + Sv)
-    X1_r        = min(max(B * (-alpha_r + Sh), -pi/2 + 0.001), pi/2 - 0.001)
-    FY2         = -(mu * FZR * Tire_par[3] * sin(C * atan(X1_r - E * (X1_r - atan(X1_r)))) + Sv)
+    X1_f        = B * alpha_f
+    FY1         = (mu * FZF * Tire_par[3] * sin(C * atan(X1_f - E * (X1_f - atan(X1_f)))))
+    X1_r        = B * alpha_r
+    FY2         = (mu * FZR * Tire_par[3] * sin(C * atan(X1_r - E * (X1_r - atan(X1_r)))))
 
+    if ux <= 0
+        ux = 0
+    end
     dx          = ux * cos(psi) - v * sin(psi)
     dy          = ux * sin(psi) + v * cos(psi)
     dpsi        = r

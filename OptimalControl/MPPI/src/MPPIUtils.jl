@@ -124,7 +124,7 @@ function ObstacleEvaluation(MPPI::MPPISearcher, states)
     for obs_idx in 1:size(obstacle_list,1)
         if sum((states[1:2]-obstacle_list[obs_idx][1:2]).^2)<=obstacle_list[obs_idx][3]^2
             constraint = 0
-			cost_value = cost_value + 10000.0*712.5
+			cost_value = cost_value + 100.0*712.5
         end
     end
 
@@ -172,7 +172,7 @@ function MPPIPlan(MPPI::MPPISearcher)
 	MPPI.p.TrajectoryCollection = Vector{MPPIHolder}(undef, MPPI.s.SamplingNumber)
 	t1 = time()
 	t2 = time()
-	while FeasibilityCount <= MPPI.s.FeasibilityCount && RolloutCount <= MPPI.s.SamplingNumber && t2 - t1 <= MPPI.s.tmax
+	while FeasibilityCount <= MPPI.s.FeasibilityCount && RolloutCount <= MPPI.s.SamplingNumber
 		RolloutInfo = TrajectoryRollout(MPPI, SampleMPPIControl(MPPI))
 		if RolloutInfo[3] == true
 			FeasibilityCount = FeasibilityCount + 1

@@ -30,7 +30,7 @@ problem_setting = Dict("goal_pt"=>goal_pt,
                         "n" => 20,
                         "X0"=> cur_states)
 # Here we only provide backward euler propogationm, which means the interpolation is constant next
-model = defineSlamonOCP(problem_setting)
+model = defineSlalomOCP(problem_setting)
 
 
 ########################   Solve the ocp for the first time  ######################## 

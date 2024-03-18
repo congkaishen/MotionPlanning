@@ -4,7 +4,7 @@ function dynamics(states, ctrl)
     M           = 2020
     Izz         = 4095
     g           = 9.81
-    mu          = 1.0
+    mu          = 0.8
     KFZF        = 1018.28 / 2
     KFZR        = 963.34 / 2
     KFZX        = 186.22
