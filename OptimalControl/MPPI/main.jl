@@ -11,7 +11,7 @@ CL = [-0.5, -2.5]
 CU = [0.5, 2.5]
 numStates = 7
 numControls = 2
-N = 15
+N = 20
 T = 3.0
 Δt = T/N
 
@@ -24,7 +24,7 @@ goal = [110, 0]
 lambda = 25.0
 GridNum = [100, 100];
 draw_env = true
-Σ = [0.1 0; 0.0 0.1];
+Σ = [0.05 0; 0.0 0.1];
 global NominalControls = ones(N, numControls) .* 0.0
 mppi = defineMPPI(numStates, numControls, lambda, X0, goal, SamplingNumber, Σ, N, T, XL, XU, CL, CU)
 defineMPPIobs!(mppi, [[50.0, 1, 2.5], [70.0, -1, 2.5], [90.0, 1, 2.5]])
@@ -60,7 +60,7 @@ for time_idx = 1:1:Int32(floor(15/δt))
         defineMPPINominalControl!(mppi, NominalControls)
         MPPIPlan(mppi)
         NominalControls = mppi.r.Control
-        println("Current time: ", round( time_idx * δt; digits = 1), "  Status: ", mppi.r.Feasibility," (",round(1000 * mppi.r.time; digits = 1)," ms)")
+        println("Current time: ", round( time_idx * δt; digits = 1), "  Status: ", mppi.r.Feasibility," (",round(1000 * mppi.r.time; digits = 1)," ms)   ", "Sample Number: ", mppi.r.RolloutCount)
 
         local interp_linear_u1 = interpolate((time_serial,), NominalControls[:,1], Gridded(Constant{Previous}()))
         local interp_linear_u2 = interpolate((time_serial,), NominalControls[:,2], Gridded(Constant{Previous}()))

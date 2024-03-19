@@ -8,7 +8,7 @@ using LinearAlgebra
 using Statistics
 include("VehicleModel.jl")
 
-function defineSlamonOCP(problem_setting)
+function defineSlalomOCP(problem_setting)
     ########################   Preparing the Map Data ######################## 
     goal_pt = problem_setting["goal_pt"]
     block_list = problem_setting["block_list"]
@@ -28,8 +28,8 @@ function defineSlamonOCP(problem_setting)
     "mu_strategy" => "adaptive",
     # "linear_solver" => "ma57",
     "max_iter" => 500,
-    "tol" => 4e-2,
-    "dual_inf_tol" => 2.,
+    "tol" => 2e-2,
+    "dual_inf_tol" => 1.,
     "constr_viol_tol" => 5e-1,
     "compl_inf_tol" => 5e-1,
     "acceptable_tol" => 1.5e-1,
@@ -120,7 +120,7 @@ function defineSlamonOCP(problem_setting)
 
     obj_goal = @expression(model, ((x[end] - goal_pt[1])^2 + (y[end] - goal_pt[2])^2)/( (x[end] - x[1])^2 + (y[end] - y[1])^2  + 0.1 )  ) # 1 is added in the dominator to avoid singurality
 
-    @objective(model, Min, 300*obj_goal + 1*y_cost + 0.01*ax_cost + 0.15*sr_cost + 200*k_cost + 0.05*v_cost + 1*sa_cost)
+    @objective(model, Min, 300*obj_goal + 1*y_cost + 0.5*ax_cost + 1.5*sr_cost  + 0.05*v_cost + 1*sa_cost)
     set_silent(model)  # Hide solver's verbose output
     return model
 end

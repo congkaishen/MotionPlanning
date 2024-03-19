@@ -18,7 +18,7 @@ exec_horizon = 0.05
 
 cur_states = [-30.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 block_list = [48 0 10 1.8]
-########################   Transcribe into mathematical programming ######################## 
+########################   Transcribe into mathematical prohramming ######################## 
 XL = [-40, -0.9, -7, -pi/5,  -pi/2, -pi/12]
 XU = [1000, 4.5, 7, pi/5,  pi/2, pi/12]
 # define goal position, block position, prediction horizon, number of collocation, and initial states
@@ -48,7 +48,7 @@ sr_act = getInterpolatedCtrls(model, problem_setting, t_sim)
 ########################   Start the similation, define some placeholders for later plot  ######################## 
 states_his = [0; cur_states]
 ctrls_his = sr_act(t_sim)
-make_gif = false
+make_gif = true
 if make_gif
     if isdir("./gifholder")
         println("Already Exists")
