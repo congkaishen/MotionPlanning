@@ -5,14 +5,17 @@ cd(@__DIR__)
 
 include("src/hybrid_astar_utils.jl")
 
-# starting_real = [-15.0, 0.0, 0.0]
-# ending_real = [15, 0.0, 0.0]
-# block_info = [[0.0, 0.0, 0.0, 5, 5]]
-
 #################### NOTE that we assume the point is located in the REAR AXLE!!! ####################
-starting_real = [6, 0, pi]
-ending_real = [0.0,1.0, pi/2]
+## Scenario 1: Parallel Parking ==> this is quite hard for hybrid A* to find a path due to coarse discretizarion
+# starting_real = [7, 0, pi/2]
+# ending_real = [-1.5 ,2.0, 0]
+# block_info = [[0.0, -1.0, 0.0, 5.5/2 + 1.0, 1.0], [-(5.5+3)/2, 1, 0.0, 1.0, 1], [(5.5+3)/2, 1, 0.0, 1.0, 1]]
+
+## Scenario 2: Perpenticular Parking 
+starting_real = [7, 0, pi/2]
+ending_real = [0.0 ,0.5, pi/2]
 block_info = [[0.0, -1.0, 0.0, 5.5/2 + 1.0, 1.0], [-5.5/2, 2.7432/2, 0.0, 1.0, 2.7432/2], [5.5/2, 2.7432/2, 0.0, 1.0, 2.7432/2]]
+
 # block_info = [[0.0, -1.0, 0.0, 5.5/2 + 1.0, 1.0], [-5.5/2, 5/2, 0.0, 1.0, 5/2], [5.5/2, 5/2, 0.0, 1.0, 5/2]]
 ############# The setting here influence discretization ############# 
 vehicle_size = [3, 2]
