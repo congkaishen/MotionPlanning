@@ -18,7 +18,7 @@ exec_horizon = 0.05
 
 cur_states = [-30.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 block_list = [48 0 10 1.8]
-########################   Transcribe into mathematical prohramming ######################## 
+########################   Transcribe into mathematical programming ######################## 
 XL = [-40, -0.9, -7, -pi/5,  -pi/2, -pi/12]
 XU = [1000, 4.5, 7, pi/5,  pi/2, pi/12]
 # define goal position, block position, prediction horizon, number of collocation, and initial states
