@@ -1,9 +1,9 @@
 function TotalCost(statesL, controlL)
     J = 0
-    for i = 1:1:size(statesL, 1)-1
-        J = J + StageCost(statesL[i, :], controlL[i, :])
+    for i = 1:1:size(statesL, 2)-1
+        J = J + StageCost(statesL[:, i], controlL[:, i])
     end
-    J = J + TerminalCost(statesL[end, :], [0 0])
+    J = J + TerminalCost(statesL[:, end], [0;0])
     return J
 end
 

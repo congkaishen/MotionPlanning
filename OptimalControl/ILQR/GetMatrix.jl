@@ -1,4 +1,5 @@
 
+######### Numerical Approximation of Central Diff ######### 
 function CalculateMatrix(states, ctrls, cost_func)
     ϵ = 1e-3
 
@@ -65,3 +66,34 @@ function CalculateMatrix(states, ctrls, cost_func)
 
     return lₓ, lᵤ, lₓₓ, lᵤᵤ, lᵤₓ
 end
+
+function LocallyLinearizeDynamics(states, ctrls, ΔT)
+    ϵ = 1e-3
+    A = zeros(size(states, 1),size(states, 1))
+    B = zeros(size(states, 1),size(ctrls,1))
+    for i in 1:size(states, 1)
+        Δstates = zeros(size(states))
+        Δstates[i] = ϵ
+        f_plus =  RK4Integration(states .+ Δstates, ctrls, ΔT)'
+        f_minus = RK4Integration(states .- Δstates, ctrls, ΔT)'
+
+        A[:, i] = (f_plus - f_minus)./(2*ϵ)
+    end
+
+    for j in 1:size(ctrls, 1)
+        Δctrls = zeros(size(ctrls))
+        Δctrls[j] = ϵ
+        f_plus =  RK4Integration(states, ctrls .+ Δctrls, ΔT)'
+        f_minus = RK4Integration(states, ctrls .- Δctrls, ΔT)'
+        B[:, j] = (f_plus - f_minus)./(2*ϵ)
+    end
+    return A, B
+end
+
+
+######### Using Packages ######### 
+# function LocallyLinearizeDynamics(states, control, δT)
+#     Ak      = ForwardDiff.jacobian((x) -> RK4Integration(x, control, δT), states)
+#     Bk      = ForwardDiff.jacobian((u) -> RK4Integration(states, u, δT), control)
+#     return Ak, Bk
+# end
