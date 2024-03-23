@@ -25,7 +25,6 @@ L = 3
 A = Symbolics.jacobian([δx, δy, δψ], states)
 B = Symbolics.jacobian([δx, δy, δψ], ctrls)
 
-A_expr = build_function(A, states, ctrls,expression=Val{false})
 
 # Afunc = eval(build_function(A, u_m, v_m, w_m, b, c, parallel = Symbolics.MultithreadedForm())[2])
 
@@ -38,3 +37,11 @@ A_expr = build_function(A, states, ctrls,expression=Val{false})
 
 
 # res = simplify.(substitute.(A, (Dict(states => rand(3,1)[:], ctrls=>rand(2,1)[:]),)))
+
+
+using BenchmarkTools
+include("utils.jl")
+@benchmark res = simplify.(substitute.(A, (Dict(states => [1,2,3], ctrls=>[1,2]),)))
+
+# @benchmark jacobian([1;2;3], [1;2])
+@benchmark gradient_hessian(stage_cost, [1;2;3], [1;2])
