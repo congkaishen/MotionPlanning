@@ -10,9 +10,9 @@ include("GetMatrix.jl")
 
 ############# Define initial states and initial controls #############
 states = [0;3.6;5;0]
-ctrls = [-2.6; 0.01]
+ctrls = [1; 0.01]
 ############# Define Settings #############
-N = 100
+N = 20
 δT = 0.05
 nstates = 4
 nctrls = 2
@@ -87,4 +87,7 @@ while abs((J_new - J) / J) > 1e-6 || iter == 1
     println(iter, "  ", J_new)
 end
 
-plot(StatesList[1,:], StatesList[2,:])
+# plot(StatesList[1,:], StatesList[2,:])
+
+
+plot(CtrlsList[1,:])
