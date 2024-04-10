@@ -24,7 +24,7 @@ function defineCISOCP(problem_setting)
     Δt_list = Horizon/(n-1)*ones(n)
     ######################## IMPORTANT!!!! Setting for IPOPT ######################## 
     user_options = (
-    "mu_strategy" => "adaptive",
+    # "mu_strategy" => "adaptive",
     # "linear_solver" => "ma57",
     "max_iter" => 500,
     "tol" => 5e-2,
@@ -130,7 +130,7 @@ function determinePoints(x0, speed, block_list, Δt, n)
     EndPoint = max(min(((block_list[1] + block_list[3] - x0) / speed) / Δt  , n), 0)
     YL =  -0.9 * ones(n)
     if EndPoint > 0 && x0 >= 0
-        YL[Int(floor(BeginPoint)): Int(ceil(EndPoint))] .= block_list[4] + 0.9 + 0.4
+        YL[Int(floor(BeginPoint)): Int(ceil(EndPoint))] .= block_list[4] + 0.9 + 0.3
     end
     return YL
 end
