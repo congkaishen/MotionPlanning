@@ -96,6 +96,37 @@ function getVehAnim(hybrid_astar::HybridAstarSearcher)
     end
 end
 
+
+function cubic_fit(cur_st, goal_st)
+    num_path = 100
+    norm_states = changeBasis(cur_st, goal_st, 1.0)
+    xg = norm_states[1]
+    yg = norm_states[2]
+    ψg = norm_states[3]
+
+    A = [xg^3 xg^2; 3*xg^2 2*xg]
+    B = [yg; tan(ψg)]
+    params = pinv(A)*B
+
+    xpath = vec(LinRange(0, xg, num_path))
+    path_actual = zeros(3, num_path)
+
+    ypath = params[1]*xpath.^3 + params[2]*xpath.^2
+    ψpath = atan.(3*params[1]*xpath.^2 + 2*params[2]*xpath)
+    path = [xpath ypath ψpath]'
+
+    x0 = cur_st[1]
+    y0 = cur_st[2]
+    ψ0 = cur_st[3]
+
+    
+    Rmat = [cos(ψ0) -sin(ψ0); sin(ψ0) cos(ψ0)]
+    path_actual[1:2, :] = Rmat*path[1:2,:] .+ [x0; y0]
+    path_actual[3, :] = path[3,:].+ψ0
+
+    return path_actual
+end
+
 function retrievePath(hybrid_astar::HybridAstarSearcher)
     RSpath_final = hybrid_astar.r.RSpath_final
     states_ori = hybrid_astar.r.hybrid_astar_states
@@ -103,14 +134,26 @@ function retrievePath(hybrid_astar::HybridAstarSearcher)
     actualpath = Matrix{Float64}[]
     actualpath = hybrid_astar.s.starting_states
 
+    # for st_idx in 1:1:size(states,2)-1
+    #     cur_st = states[:,st_idx]
+    #     goal_st = states[:,st_idx+1]
+    #     minR = hybrid_astar.s.minR
+    #     norm_states = changeBasis(cur_st, goal_st, minR)
+    #     opt_cmd, opt_cost, _, _ = allpath(norm_states)
+    #     actualpath = [actualpath createActPath(cur_st, minR, opt_cmd)]
+    # end
+
     for st_idx in 1:1:size(states,2)-1
         cur_st = states[:,st_idx]
         goal_st = states[:,st_idx+1]
-        minR = hybrid_astar.s.minR
-        norm_states = changeBasis(cur_st, goal_st, minR)
-        opt_cmd, opt_cost, _, _ = allpath(norm_states)
-        actualpath = [actualpath createActPath(cur_st, minR, opt_cmd)]
+        # minR = hybrid_astar.s.minR
+        # norm_states = changeBasis(cur_st, goal_st, 1.0)
+        # path = zeros(3, cmd_idx*steps + 1)
+        actualpath = [actualpath cubic_fit(cur_st, goal_st)]
     end
+
+    
+
     actualpath = [actualpath RSpath_final]
     hybrid_astar.r.actualpath = actualpath
 

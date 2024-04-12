@@ -5,7 +5,7 @@ include("src/tracker_utils.jl")
 
 # You can set plan_path to be false, so that you can just focus on tracking
 # BUT!!!, you have to set it as true in the first run to get a reference path to play with
-plan_path = true
+plan_path = false
 tr_draw_fig = true
 tr_make_gif = true
 
@@ -54,7 +54,7 @@ veh_param = [veh_length, veh_width, max_sa]
 
 
 ############ Tune for feedback PI controller ############ 
-look_ahead_dist = 0.5
+look_ahead_dist = 1.0
 p_gain = 10
 i_gain = 0.1
 # p_gain = 0
