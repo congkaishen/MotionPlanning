@@ -5,7 +5,7 @@ include("src/tracker_utils.jl")
 
 # You can set plan_path to be false, so that you can just focus on tracking
 # BUT!!!, you have to set it as true in the first run to get a reference path to play with
-plan_path = false
+plan_path = true
 tr_draw_fig = true
 tr_make_gif = true
 
