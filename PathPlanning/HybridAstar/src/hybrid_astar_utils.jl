@@ -119,7 +119,6 @@ function cubic_fit(cur_st, goal_st)
     y0 = cur_st[2]
     ψ0 = cur_st[3]
 
-    
     Rmat = [cos(ψ0) -sin(ψ0); sin(ψ0) cos(ψ0)]
     path_actual[1:2, :] = Rmat*path[1:2,:] .+ [x0; y0]
     path_actual[3, :] = path[3,:].+ψ0
@@ -152,11 +151,8 @@ function retrievePath(hybrid_astar::HybridAstarSearcher)
         actualpath = [actualpath cubic_fit(cur_st, goal_st)]
     end
 
-    
-
     actualpath = [actualpath RSpath_final]
     hybrid_astar.r.actualpath = actualpath
-
 
     actualpts = hybrid_astar.r.actualpath[1:2, :]
     ds = sqrt.(sum((actualpts[:,2:end] - actualpts[:,1:end-1]).^2, dims = 1))
@@ -173,7 +169,6 @@ function retrievePath(hybrid_astar::HybridAstarSearcher)
     x_interp = linear_interpolation(traver_s_list, x_interp_dense(traver_s_list))
     y_interp = linear_interpolation(traver_s_list, y_interp_dense(traver_s_list))
     ψ_interp = linear_interpolation(traver_s_list, ψ_interp_dense(traver_s_list))
-
 
     hybrid_astar.r.x_interp = x_interp
     hybrid_astar.r.y_interp = y_interp
