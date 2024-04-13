@@ -140,7 +140,7 @@ function defineCISOCP(problem_setting)
     x_cost = @expression( model, sum( x[j]^2  for j=1:1:n))
     y_cost = @expression( model, sum( y[j]^2  for j=1:1:n))
     ψ_cost = @expression( model, sum( ψ[j]^2  for j=1:1:n))
-    @objective(model, Min, 10*y_cost + 0.5*x_cost + 100*ψ_cost + 0.01*ux_cost + 0.01*sr_cost + 0.01*ax_cost + 0.01*sa_cost )
+    @objective(model, Min, 10*y_cost + 0.5*x_cost + 10*ψ_cost + 0.01*ux_cost + 0.01*sr_cost + 0.01*ax_cost + 0.01*sa_cost )
 
     set_silent(model)  # Hide solver's verbose output
     return model
