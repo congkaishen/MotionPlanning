@@ -60,7 +60,7 @@ end
 if make_gif anim = Plots.Animation() end
 
 TimeList = []
-for i in 1:1Int32(floor(max_sim_time/Δt_sim))
+for i in 1:1#1Int32(floor(max_sim_time/Δt_sim))
     global max_sim_time, t_sim, Δt_sim, cur_states, model, goal_pt, sr_act, ax_act, states_his, optStates, optCtrls, Δt, TimeList
     
     ########################  solve optimal control problem for every exec_horizon  ######################## 

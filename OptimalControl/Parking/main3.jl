@@ -11,8 +11,8 @@ plot()
 ########################   Settings on Simulation and MPC ######################## 
 t_sim = 0.0
 Δt_sim = 1e-3
-max_sim_time = 5.0
-exec_horizon = 0.05
+max_sim_time = 10.0
+exec_horizon = 0.2
 
 ########################   Settings on the Slalom Scenario ######################## 
 
@@ -29,7 +29,7 @@ vehLength = 3.4
 vehWidth = 0.9
 vehDiagonal = sqrt(vehLength^2+vehWidth^2)
 vehDiagonalAngle = atan(vehWidth/vehLength)
-vehSpace = 1.0
+vehSpace = 1.5
 
 # define goal position, block position, prediction horizon, number of collocation, and initial states
 # the block is treated as circle: [center_x center_y radius; ...]
@@ -113,7 +113,7 @@ for i in 1:Int32(floor(max_sim_time/Δt_sim))
 end
 
 
-if make_gif gif(anim, "./Parking/gifholder/MPC.gif", fps = 20) end
+if make_gif gif(anim, "./gifholder/MPC.gif", fps = 20) end
 
 CSV.write("MPCTrajectory.csv", Tables.table(states_his'), writeheader=false)
 

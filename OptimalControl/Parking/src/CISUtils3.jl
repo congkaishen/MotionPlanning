@@ -37,7 +37,7 @@ function defineCISOCP(problem_setting)
     "acceptable_compl_inf_tol" => 0.02,
     "warm_start_init_point" => "yes",
     "fixed_variable_treatment" => "relax_bounds",
-    "max_cpu_time" => 0.05,
+    "max_cpu_time" => 0.2,
     "print_level" => 1,
     )
 
@@ -53,6 +53,7 @@ function defineCISOCP(problem_setting)
     @variables(model, begin
         XL[i] ≤ xst[j in 1:n, i in 1:numStates] ≤ XU[i]
         CL[i] ≤ u[j in 1:n, i in 1:numControls] ≤ CU[i] 
+        0.2 <= tf <= 15.0
     end)
 
     # initial contidions
@@ -76,7 +77,7 @@ function defineCISOCP(problem_setting)
     states_t = [x_s, y_s, ψ_s, ux_s, sa_s, sr_s, ax_s]
     interp_linear = Interpolations.LinearInterpolation([1, n], [states_s, states_t])
     initial_guess = mapreduce(transpose, vcat, interp_linear.(1:n))
-    set_start_value.(all_variables(model), vec(initial_guess))
+    set_start_value.(all_variables(model), push!(vec(initial_guess), 7.0))
 
 
     x = xst[:, 1]
@@ -104,10 +105,11 @@ function defineCISOCP(problem_setting)
     vehDiagonalAngle = problem_setting["vehDiagonalAngle"]
     vehSpace = problem_setting["vehSpace"]
 
-    @constraint(model, [j = 1:n], ((x[j]-(1.5*vehLength+vehSpace))^10)/(vehLength/2+0.4)^10+((y[j]-0)^10)/(vehWidth/2+0.3)^10 >= 1)
-    @constraint(model, [j = 1:n], ((x[j]+(0.5*vehLength+vehSpace))^10)/(vehLength/2+0.4)^10+((y[j]+0)^10)/(vehWidth/2+0.3)^10 >= 1)
-    @constraint(model, [j = 1:n], (((x[j]+3.4*cos(ψ[j]))-(1.5*vehLength+vehSpace))^10)/(vehLength/2+0.4)^10+(((y[j]+3.4*sin(ψ[j]))-0)^10)/(vehWidth/2+0.3)^10 >= 1)
-    @constraint(model, [j = 1:n], (((x[j]+3.4*cos(ψ[j]))+(0.5*vehLength+vehSpace))^10)/(vehLength/2+0.4)^10+(((y[j]+3.4*sin(ψ[j]))+0)^10)/(vehWidth/2+0.3)^10 >= 1)
+    @constraint(model, [j = 1:n], ((x[j]-(1.5*vehLength+vehSpace))^6)/(vehLength/2+0.4)^6+((y[j]-0)^6)/(vehWidth/2+0.3)^6 >= 1)
+    @constraint(model, [j = 1:n], ((x[j]+(0.5*vehLength+vehSpace))^6)/(vehLength/2+0.4)^6+((y[j]+0)^6)/(vehWidth/2+0.3)^6 >= 1)
+    @constraint(model, [j = 1:n], (((x[j]+3.4*cos(ψ[j]))-(1.5*vehLength+vehSpace))^6)/(vehLength/2+0.4)^6+(((y[j]+3.4*sin(ψ[j]))-0)^6)/(vehWidth/2+0.3)^6 >= 1)
+    @constraint(model, [j = 1:n], (((x[j]+3.4*cos(ψ[j]))+(0.5*vehLength+vehSpace))^6)/(vehLength/2+0.4)^6+(((y[j]+3.4*sin(ψ[j]))+0)^6)/(vehWidth/2+0.3)^6 >= 1)
+    @constraint(model, x[end]^2 + y[end]^2 + ψ[end]^2 <= 0.005 )
 
     sr_cost = @expression( model, sum((sr[j])^2  for j=1:1:n))
     ux_cost = @expression( model, sum((ux[j])^2  for j=1:1:n))
@@ -147,7 +149,7 @@ function defineCISOCP(problem_setting)
     x_cost = @expression( model, sum( x[j]^2  for j=1:1:n))
     y_cost = @expression( model, sum( y[j]^2  for j=1:1:n))
     ψ_cost = @expression( model, sum( ψ[j]^2  for j=1:1:n))
-    @objective(model, Min, 10*y_cost + 0.5*x_cost + 100*ψ_cost + 0.01*ux_cost + 0.01*sr_cost + 0.01*ax_cost + 0.01*sa_cost )
+    @objective(model, Min, 10*y_cost + 0.5*x_cost + 100*ψ_cost + 0.01*ux_cost + 0.01*sr_cost + 0.01*ax_cost + 0.01*sa_cost + tf)
 
     set_silent(model)  # Hide solver's verbose output
     return model
