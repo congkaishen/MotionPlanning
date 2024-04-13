@@ -3,7 +3,7 @@ using JuMP
 using MAT
 using Interpolations
 import Ipopt
-import HSL_jll
+# import HSL_jll
 using LinearAlgebra
 using Statistics
 include("VehicleModel2.jl")
@@ -25,7 +25,7 @@ function defineCISOCP(problem_setting)
     ######################## IMPORTANT!!!! Setting for IPOPT ######################## 
     user_options = (
     "mu_strategy" => "adaptive",
-    "linear_solver" => "ma27",
+    # "linear_solver" => "ma57",
     "max_iter" => 3000,
     "tol" => 5e-2,
     "dual_inf_tol" => 2.,
@@ -53,7 +53,7 @@ function defineCISOCP(problem_setting)
     @variables(model, begin
         XL[i] ≤ xst[j in 1:n, i in 1:numStates] ≤ XU[i]
         CL[i] ≤ u[j in 1:n, i in 1:numControls] ≤ CU[i]
-        0.2 <= tf <= 15.0
+        0.2 <= tf <= 7.0
     end)
 
     # initial contidions
@@ -77,7 +77,7 @@ function defineCISOCP(problem_setting)
     states_t = [x_s, y_s, ψ_s, ux_s, sa_s, sr_s, ax_s]
     interp_linear = Interpolations.LinearInterpolation([1, n], [states_s, states_t])
     initial_guess = mapreduce(transpose, vcat, interp_linear.(1:n))
-    set_start_value.(all_variables(model), push!(vec(initial_guess), 7.0))
+    set_start_value.(all_variables(model), push!(vec(initial_guess), 5.0))
 
 
     x = xst[:, 1]
@@ -99,12 +99,9 @@ function defineCISOCP(problem_setting)
         end
     end
 
-
-    @constraint(model, [j = 1:n], ((x[j])^2)/(5.0^2)+((y[j]-(-5.0))^2)/(5.0^2) >= 1)
-
-    @constraint(model, [j = 1:n], ((x[j]-1.8)^10)/(1.7^10)+((y[j]-2)^10)/(1.8^10) >= 1)
-    @constraint(model, [j = 1:n], ((x[j]-1.8)^10)/(1.7^10)+((y[j]+2)^10)/(1.8^10) >= 1)
-    @constraint(model, x[end]^2 + y[end]^2 + ψ[end]^2 <= 0.005 )
+    @constraint(model, [j = 1:n], ((x[j]-1.7)^10)/(1.7^10)+((y[j]-2)^10)/(1.8^10) >= 1)
+    @constraint(model, [j = 1:n], ((x[j]-1.7)^10)/(1.7^10)+((y[j]+2)^10)/(1.8^10) >= 1)
+    # @constraint(model, ux[end]^2 <= 0.001 )
 
     sr_cost = @expression( model, sum((sr[j])^2  for j=1:1:n))
     ux_cost = @expression( model, sum((ux[j])^2  for j=1:1:n))
@@ -141,10 +138,11 @@ function defineCISOCP(problem_setting)
     # ψ_cost = @expression( model, sum( ψ[j]^2  for j=1:1:n))
     # @objective(model, Min, 10*y_cost + 1*x_cost + 100*ψ_cost + 0.01*sr_cost + 0.01*ax_cost + 0.01*sa_cost )
 
-    x_cost = @expression( model, sum( x[j]^2  for j=1:1:n))
-    y_cost = @expression( model, sum( y[j]^2  for j=1:1:n))
-    ψ_cost = @expression( model, sum( ψ[j]^2  for j=1:1:n))
-    @objective(model, Min, 10*y_cost + 0.5*x_cost + 100*ψ_cost + 0.01*ux_cost + 0.01*sr_cost + 0.01*ax_cost + 0.01*sa_cost )
+    x_cost = @expression( model, sum( x[j]^2  for j=1:1:n-1))
+    y_cost = @expression( model, sum( y[j]^2  for j=1:1:n-1))
+    ψ_cost = @expression( model, sum( ψ[j]^2  for j=1:1:n-1))
+    terminalcost = @expression(model, 10 * x[end]^2 + 10 * y[end]^2 + ψ[end]^2 + ux[end]^2 )
+    @objective(model, Min, 10*y_cost + 0.5*x_cost + 50 * terminalcost + 50*ψ_cost + 0.15 *ux_cost + 0.01*sr_cost + 0.01*ax_cost + 0.01*sa_cost + 10 * tf )
 
     set_silent(model)  # Hide solver's verbose output
     return model
@@ -152,7 +150,7 @@ end
 
 function getInterpolatedCtrls(model, problem_setting, current_sim_time)
     optCtrls = value.(model[:u])
-    Horizon = problem_setting["Horizon"]
+    Horizon = value(model[:tf])
     n = problem_setting["n"]
     time_list = collect(range(current_sim_time, current_sim_time + Horizon, length=n))
     InterpolateSr = interpolate((time_list ,), optCtrls[:,1], Gridded(Constant{Next}()))

@@ -12,7 +12,7 @@ plot()
 t_sim = 0.0
 Δt_sim = 1e-3
 max_sim_time = 10.0
-exec_horizon = 0.2
+exec_horizon = 0.05
 
 ########################   Settings on the Slalom Scenario ######################## 
 
@@ -29,7 +29,7 @@ vehLength = 3.4
 vehWidth = 0.9
 vehDiagonal = sqrt(vehLength^2+vehWidth^2)
 vehDiagonalAngle = atan(vehWidth/vehLength)
-vehSpace = 1.5
+vehSpace = 2.0
 
 # define goal position, block position, prediction horizon, number of collocation, and initial states
 # the block is treated as circle: [center_x center_y radius; ...]

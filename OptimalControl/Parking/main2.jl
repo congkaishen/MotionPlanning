@@ -1,6 +1,5 @@
 # one way to tackle initial guess: https://jso-docs.github.io/solve-pdenlpmodels-with-jsosolvers/
 
-cd(@__DIR__)
 
 include("src/CISUtils2.jl")
 
@@ -12,12 +11,12 @@ plot()
 ########################   Settings on Simulation and MPC ######################## 
 t_sim = 0.0
 Δt_sim = 1e-3
-max_sim_time = 15.0
+max_sim_time = 12.0
 exec_horizon = 0.2
 
 ########################   Settings on the Slalom Scenario ######################## 
 
-cur_states = [5.0, -10.0, pi/2, 2.0, 0.0]
+cur_states = [5.0, -10.0, π/2, 2.0, 0.0]
 block_list = [48 0 10 1.8]
 ########################   Transcribe into mathematical prohramming ######################## 
 XL = [0, -10, -pi/2, -2.0, -0.7]
@@ -27,7 +26,7 @@ CU = [1.0, 4.0]
 # define goal position, block position, prediction horizon, number of collocation, and initial states
 # the block is treated as circle: [center_x center_y radius; ...]
 problem_setting = Dict( "block_list"=> block_list, 
-                        "Horizon" => 6,
+                        "Horizon" => 5,
                         "n" => 50,
                         "X0"=> cur_states,
                         "XL"=>XL,
