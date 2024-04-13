@@ -3,7 +3,7 @@ using JuMP
 using MAT
 using Interpolations
 import Ipopt
-# import HSL_jll
+import HSL_jll
 using LinearAlgebra
 using Statistics
 include("VehicleModel2.jl")
@@ -25,7 +25,7 @@ function defineCISOCP(problem_setting)
     ######################## IMPORTANT!!!! Setting for IPOPT ######################## 
     user_options = (
     "mu_strategy" => "adaptive",
-    # "linear_solver" => "ma27",
+    "linear_solver" => "ma27",
     "max_iter" => 3000,
     "tol" => 5e-2,
     "dual_inf_tol" => 2.,
@@ -100,7 +100,7 @@ function defineCISOCP(problem_setting)
     end
 
 
-    @constraint(model, [j = 1:n], ((x[j])^2)/(4.5^2)+((y[j]-(-8.0))^2)/(6.0^2) >= 1)
+    @constraint(model, [j = 1:n], ((x[j])^2)/(5.0^2)+((y[j]-(-5.0))^2)/(5.0^2) >= 1)
 
     @constraint(model, [j = 1:n], ((x[j]-1.8)^10)/(1.7^10)+((y[j]-2)^10)/(1.8^10) >= 1)
     @constraint(model, [j = 1:n], ((x[j]-1.8)^10)/(1.7^10)+((y[j]+2)^10)/(1.8^10) >= 1)
