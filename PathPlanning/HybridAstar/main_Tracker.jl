@@ -54,7 +54,7 @@ veh_param = [veh_length, veh_width, max_sa]
 
 
 ############ Tune for feedback PI controller ############ 
-look_ahead_dist = 0.5
+look_ahead_dist = 1.0
 p_gain = 10
 i_gain = 0.1
 # p_gain = 0
