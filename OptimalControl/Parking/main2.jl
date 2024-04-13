@@ -16,7 +16,7 @@ exec_horizon = 0.2
 
 ########################   Settings on the Slalom Scenario ######################## 
 
-cur_states = [5.0, -10.0, pi/2, 2.0, 0.0]
+cur_states = [5.0, -5.0, 0, 2.0, 0.0]
 block_list = [48 0 10 1.8]
 ########################   Transcribe into mathematical prohramming ######################## 
 XL = [0, -10, -pi/2, -2.0, -0.7]
