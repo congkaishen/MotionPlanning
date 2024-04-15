@@ -12,31 +12,29 @@ plot()
 ########################   Settings on Simulation and MPC ######################## 
 t_sim = 0.0
 Δt_sim = 1e-3
-max_sim_time = 10.0
-exec_horizon = 0.05
+max_sim_time = 11.0
+exec_horizon = 0.1
 
-########################   Settings on the Slalom Scenario ######################## 
-
+########################   Settings on the Scenario ######################## 
 cur_states = [7.0, 3.0, 0.0, 0.0, 0.0]
 block_list = [48 0 10 1.8]
+vehLength = 3.4
+vehWidth = 1.8
+vehDiagonal = sqrt(vehLength^2+vehWidth^2)
+vehDiagonalAngle = atan(vehWidth/vehLength)
+vehSpace = 1.25
+
 ########################   Transcribe into mathematical programming ######################## 
 XL = [-100, -10, -pi/2, -2.0, -0.7]
 XU = [100, 10, pi/2, 2.0, 0.7]
-CL = [-1.0, -4.0]
-CU = [1.0, 4.0]
-
-
-vehLength = 3.4
-vehWidth = 0.9
-vehDiagonal = sqrt(vehLength^2+vehWidth^2)
-vehDiagonalAngle = atan(vehWidth/vehLength)
-vehSpace = 2.0
+CL = [-1.0, -2.0]
+CU = [1.0, 2.0]
 
 # define goal position, block position, prediction horizon, number of collocation, and initial states
 # the block is treated as circle: [center_x center_y radius; ...]
 problem_setting = Dict( "block_list"=> block_list, 
-                        "Horizon" => 6,
-                        "n" => 60,
+                        "Horizon" => 4,
+                        "n" => 40,
                         "X0"=> cur_states,
                         "XL"=>XL,
                         "XU"=>XU,

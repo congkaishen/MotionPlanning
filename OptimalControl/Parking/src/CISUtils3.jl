@@ -6,11 +6,17 @@ import Ipopt
 # import HSL_jll
 using LinearAlgebra
 using Statistics
+using Plots.PlotMeasures
 include("VehicleModel2.jl")
 
 function defineCISOCP(problem_setting)
     ########################   Preparing the Map Data ######################## 
     block_list = problem_setting["block_list"]
+    vehLength = problem_setting["vehLength"]
+    vehWidth = problem_setting["vehWidth"]
+    vehDiagonal = problem_setting["vehDiagonal"]
+    vehDiagonalAngle = problem_setting["vehDiagonalAngle"]
+    vehSpace = problem_setting["vehSpace"]
     ########################   Define Model Parameters ######################## 
     Horizon = problem_setting["Horizon"]
     n = problem_setting["n"]
@@ -99,18 +105,18 @@ function defineCISOCP(problem_setting)
         end
     end
 
-    vehLength = problem_setting["vehLength"]
-    vehWidth = problem_setting["vehWidth"]
-    vehDiagonal = problem_setting["vehDiagonal"]
-    vehDiagonalAngle = problem_setting["vehDiagonalAngle"]
-    vehSpace = problem_setting["vehSpace"]
+    safetyMargin=0.2;
 
-    @constraint(model, [j = 1:n], ((x[j]-(1.5*vehLength+vehSpace))^10)/(vehLength/2+0.7)^10+((y[j]-0)^10)/(vehWidth+0.6)^10 >= 1)
-    @constraint(model, [j = 1:n], ((x[j]+(0.5*vehLength+vehSpace))^10)/(vehLength/2+0.7)^10+((y[j]+0)^10)/(vehWidth+0.6)^10 >= 1)
-    @constraint(model, [j = 1:n], (((x[j]+3.4*cos(ψ[j]))-(1.5*vehLength+vehSpace))^10)/(vehLength/2+0.7)^10+(((y[j]+3.4*sin(ψ[j]))-0)^10)/(vehWidth+0.6)^10 >= 1)
-    @constraint(model, [j = 1:n], (((x[j]+3.4*cos(ψ[j]))+(0.5*vehLength+vehSpace))^10)/(vehLength/2+0.7)^10+(((y[j]+3.4*sin(ψ[j]))+0)^10)/(vehWidth+0.6)^10 >= 1)
-    @constraint(model, [j = 1:n], (((x[j]+1.7*cos(ψ[j]) - 0.45 * sin(ψ[j]))-(1.5*vehLength+vehSpace))^10)/(vehLength/2+0.7)^10+(((y[j]+3.4*sin(ψ[j]) + 0.45 * cos(ψ[j]))-0)^10)/(vehWidth+0.6)^10 >= 1)
-    @constraint(model, [j = 1:n], (((x[j]+3.4*cos(ψ[j]) + 0.45 * sin(ψ[j]))+(0.5*vehLength+vehSpace))^10)/(vehLength/2+0.7)^10+(((y[j]+3.4*sin(ψ[j]) - 0.45 * cos(ψ[j]))+0)^10)/(vehWidth+0.6)^10 >= 1)
+    # constraints for middle of rear axle
+    @constraint(model, [j = 1:n], ((x[j]-(1.5*vehLength+vehSpace))^10)/(vehLength/2+safetyMargin)^10+((y[j]-0)^10)/(vehWidth/2.0+safetyMargin)^10 >= 1)
+    @constraint(model, [j = 1:n], ((x[j]+(0.5*vehLength+vehSpace))^10)/(vehLength/2+safetyMargin)^10+((y[j]+0)^10)/(vehWidth/2.0+safetyMargin)^10 >= 1)
+    # constraints for middle of front axle
+    @constraint(model, [j = 1:n], (((x[j]+vehLength*cos(ψ[j]))-(1.5*vehLength+vehSpace))^10)/(vehLength/2.0+safetyMargin)^10+(((y[j]+vehLength*sin(ψ[j]))-0)^10)/(vehWidth/2.0+safetyMargin)^10 >= 1)
+    @constraint(model, [j = 1:n], (((x[j]+vehLength*cos(ψ[j]))+(0.5*vehLength+vehSpace))^10)/(vehLength/2.0+safetyMargin)^10+(((y[j]+vehLength*sin(ψ[j]))+0)^10)/(vehWidth/2.0+safetyMargin)^10 >= 1)
+    # constraints for right front corner
+    @constraint(model, [j = 1:n], (((x[j]+vehLength*cos(ψ[j])+vehWidth/2.0*sin(ψ[j]))-(1.5*vehLength+vehSpace))^10)/(vehLength/2.0+safetyMargin)^10+(((y[j]-vehWidth/2.0*cos(ψ[j])+vehLength*sin(ψ[j]))-0)^10)/(vehWidth/2.0+safetyMargin)^10 >= 1)
+    # constraints for right edge middle
+    @constraint(model, [j = 1:n], (((x[j]+vehLength/2.0*cos(ψ[j])+vehWidth/2.0*sin(ψ[j]))-(1.5*vehLength+vehSpace))^10)/(vehLength/2.0+safetyMargin)^10+(((y[j]-vehWidth/2.0*cos(ψ[j])+vehLength/2.0*sin(ψ[j]))-0)^10)/(vehWidth/2.0+safetyMargin)^10 >= 1)
 
     sr_cost = @expression( model, sum((sr[j])^2  for j=1:1:n))
     ux_cost = @expression( model, sum((ux[j])^2  for j=1:1:n))
@@ -150,8 +156,8 @@ function defineCISOCP(problem_setting)
     x_cost = @expression( model, sum( x[j]^2  for j=1:1:n))
     y_cost = @expression( model, sum( y[j]^2  for j=1:1:n))
     ψ_cost = @expression( model, sum( ψ[j]^2  for j=1:1:n))
-    terminalcost = @expression(model, 10 * x[end]^2 + 10 * y[end]^2 + ψ[end]^2 + ux[end]^2 )
-    @objective(model, Min, 10*y_cost + 0.5*x_cost + 50 * terminalcost + 50*ψ_cost + 0.15 *ux_cost + 0.01*sr_cost + 0.01*ax_cost + 0.01*sa_cost + 10 * tf )
+    terminalcost = @expression(model, x[end]^2 + 10 * y[end]^2 + ψ[end]^2 + ux[end]^2 )
+    @objective(model, Min, 10*y_cost + 0.5*x_cost + 100 * terminalcost + 50*ψ_cost + 0.15 *ux_cost + 0.01*sr_cost + 0.01*ax_cost + 0.01*sa_cost + 10 * tf )
 
     set_silent(model)  # Hide solver's verbose output
     return model
@@ -209,16 +215,13 @@ end
 
 function plotRes(problem_setting, states_his, optStates)
 
-
-    obs_setting = problem_setting["block_list"]
-
     vehLength = problem_setting["vehLength"]
     vehWidth = problem_setting["vehWidth"]
     vehDiagonal = problem_setting["vehDiagonal"]
     vehDiagonalAngle = problem_setting["vehDiagonalAngle"]
     vehSpace = problem_setting["vehSpace"]
 
-	h = plot(size = [2*700, 2*400])
+	h = plot(size = [2*600, 2*300])
 	# h = plot()
     # h = plot!(h, circleShape(0,0, 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:red, linecolor = :red, legend = false, fillalpha = 1.0)
     # for obs_idx = 1:1:size(obs_setting, 1)
@@ -226,8 +229,6 @@ function plotRes(problem_setting, states_his, optStates)
 	# 	h = plot!(h, circleShape(obs_setting[obs_idx, 1], obs_setting[obs_idx, 2], obs_setting[obs_idx, 3], obs_setting[obs_idx, 4]), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 0.2)
     # end
 
-
-    
     h = plot!(h, ObsShape(vehLength+vehSpace, 0, 0),
     seriestype = [:shape],
     lw = 0.5,
@@ -252,7 +253,7 @@ function plotRes(problem_setting, states_his, optStates)
 	fillalpha = 1
 	)
     h = plot!(h, optStates[:,1], optStates[:,2],lw = 2, aspect_ratio=:equal, lc=:red, legend=false)
-    h = plot!(states_his[2,:], states_his[3,:], lw = 2, aspect_ratio=:equal, lc=:green, xlims = (-10, 15), ylims = (-5, 7.5), fillalpha = 1.0, xlabel = "X (m)", ylabel = "Y (m)", xtickfontsize=16, ytickfontsize=16, xguidefontsize=18, yguidefontsize=18)
+    h = plot!(states_his[2,:], states_his[3,:], lw = 2, aspect_ratio=:equal, lc=:green, xlims = (-10, 12), ylims = (-5, 7.5), fillalpha = 1.0, xlabel = "X (m)", ylabel = "Y (m)", xtickfontsize=16, ytickfontsize=16, xguidefontsize=18, yguidefontsize=18, bottom_margin = 10mm, left_margin = 10mm)
     return h
 
 end

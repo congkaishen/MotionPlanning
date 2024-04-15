@@ -13,27 +13,38 @@ plot()
 t_sim = 0.0
 Δt_sim = 1e-3
 max_sim_time = 12.0
-exec_horizon = 0.2
+exec_horizon = 0.1
 
-########################   Settings on the Slalom Scenario ######################## 
-
+########################   Settings on the Scenario ######################## 
 cur_states = [5.0, -10.0, π/2, 2.0, 0.0]
 block_list = [48 0 10 1.8]
-########################   Transcribe into mathematical prohramming ######################## 
+vehLength = 3.4
+vehWidth = 1.8
+vehDiagonal = sqrt(vehLength^2+vehWidth^2)
+vehDiagonalAngle = atan(vehWidth/vehLength)
+vehSpace = 0.5
+
+########################   Transcribe into mathematical programming ######################## 
 XL = [0, -10, -pi/2, -2.0, -0.7]
 XU = [100, 10, pi/2, 2.0, 0.7]
 CL = [-1.0, -4.0]
 CU = [1.0, 4.0]
+
 # define goal position, block position, prediction horizon, number of collocation, and initial states
 # the block is treated as circle: [center_x center_y radius; ...]
 problem_setting = Dict( "block_list"=> block_list, 
-                        "Horizon" => 5,
-                        "n" => 50,
+                        "Horizon" => 4,
+                        "n" => 40,
                         "X0"=> cur_states,
                         "XL"=>XL,
                         "XU"=>XU,
                         "CL"=>CL,
-                        "CU"=>CU)
+                        "CU"=>CU,
+                        "vehLength"=>vehLength,
+                        "vehWidth"=>vehWidth,
+                        "vehDiagonal"=>vehDiagonal,
+                        "vehDiagonalAngle"=>vehDiagonalAngle,
+                        "vehSpace"=>vehSpace)
 Δt = problem_setting["Horizon"] / (problem_setting["n"] - 1) 
 
 # Here we only provide backward euler propogationm, which means the interpolation is constant next
