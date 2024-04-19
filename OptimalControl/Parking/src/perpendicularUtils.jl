@@ -7,28 +7,23 @@ import Ipopt
 using LinearAlgebra
 using Statistics
 using Plots.PlotMeasures
-include("VehicleModel2.jl")
+include("VehicleModel.jl")
 
 function defineCISOCP(problem_setting)
     ########################   Preparing the Map Data ######################## 
     block_list = problem_setting["block_list"]
-    vehLength = problem_setting["vehLength"]
-    vehWidth = problem_setting["vehWidth"]
-    vehDiagonal = problem_setting["vehDiagonal"]
-    vehDiagonalAngle = problem_setting["vehDiagonalAngle"]
     vehSpace = problem_setting["vehSpace"]
     ########################   Define Model Parameters ######################## 
     Horizon = problem_setting["Horizon"]
     n = problem_setting["n"]
+    Δt_list = Horizon/(n-1)*ones(n)
     ######################## Initial States Settings ######################## 
     # states: x y ψ ux sa
     cur_states = problem_setting["X0"]
     # controls: sr ax
     cur_ctrls = [0.0, 0.0]
     cur_var = vcat(cur_states, cur_ctrls)
-    ######################## Prepare cost_to_go Parameters and Block for KS based on current states ######################## 
-    Δt_list = Horizon/(n-1)*ones(n)
-    ######################## IMPORTANT!!!! Setting for IPOPT ######################## 
+    ######################## IMPORTANT!!!! Settings for IPOPT ######################## 
     user_options = (
     "mu_strategy" => "adaptive",
     # "linear_solver" => "ma57",
@@ -59,7 +54,7 @@ function defineCISOCP(problem_setting)
     @variables(model, begin
         XL[i] ≤ xst[j in 1:n, i in 1:numStates] ≤ XU[i]
         CL[i] ≤ u[j in 1:n, i in 1:numControls] ≤ CU[i]
-        0.2 <= tf <= 7.0 
+        0.2 <= tf <= 7.0
     end)
 
     # initial contidions
@@ -101,61 +96,20 @@ function defineCISOCP(problem_setting)
 
     for j = 2:n
         for i = 1:numStates
-            @constraint(model, xst[j, i] == xst[j - 1, i] +Δt[j - 1] * δxst[j, i])
+            @constraint(model, xst[j, i] == xst[j - 1, i] + tf / (n - 1) * δxst[j, i])
         end
     end
 
-    safetyMargin=0.2;
-
-    # constraints for middle of rear axle
-    @constraint(model, [j = 1:n], ((x[j]-(1.5*vehLength+vehSpace))^10)/(vehLength/2+safetyMargin)^10+((y[j]-0)^10)/(vehWidth/2.0+safetyMargin)^10 >= 1)
-    @constraint(model, [j = 1:n], ((x[j]+(0.5*vehLength+vehSpace))^10)/(vehLength/2+safetyMargin)^10+((y[j]+0)^10)/(vehWidth/2.0+safetyMargin)^10 >= 1)
-    # constraints for middle of front axle
-    @constraint(model, [j = 1:n], (((x[j]+vehLength*cos(ψ[j]))-(1.5*vehLength+vehSpace))^10)/(vehLength/2.0+safetyMargin)^10+(((y[j]+vehLength*sin(ψ[j]))-0)^10)/(vehWidth/2.0+safetyMargin)^10 >= 1)
-    @constraint(model, [j = 1:n], (((x[j]+vehLength*cos(ψ[j]))+(0.5*vehLength+vehSpace))^10)/(vehLength/2.0+safetyMargin)^10+(((y[j]+vehLength*sin(ψ[j]))+0)^10)/(vehWidth/2.0+safetyMargin)^10 >= 1)
-    # constraints for right front corner
-    @constraint(model, [j = 1:n], (((x[j]+vehLength*cos(ψ[j])+vehWidth/2.0*sin(ψ[j]))-(1.5*vehLength+vehSpace))^10)/(vehLength/2.0+safetyMargin)^10+(((y[j]-vehWidth/2.0*cos(ψ[j])+vehLength*sin(ψ[j]))-0)^10)/(vehWidth/2.0+safetyMargin)^10 >= 1)
-    # constraints for right edge middle
-    @constraint(model, [j = 1:n], (((x[j]+vehLength/2.0*cos(ψ[j])+vehWidth/2.0*sin(ψ[j]))-(1.5*vehLength+vehSpace))^10)/(vehLength/2.0+safetyMargin)^10+(((y[j]-vehWidth/2.0*cos(ψ[j])+vehLength/2.0*sin(ψ[j]))-0)^10)/(vehWidth/2.0+safetyMargin)^10 >= 1)
+    @constraint(model, [j = 1:n], ((x[j]-vehLength/2.0)^10)/(vehLength/2.0)^10+((y[j]-(vehWidth+vehSpace))^10)/(vehWidth/2.0)^10 >= 1)
+    @constraint(model, [j = 1:n], ((x[j]-vehLength/2.0)^10)/(vehLength/2.0)^10+((y[j]+(vehWidth+vehSpace))^10)/(vehWidth/2.0)^10 >= 1)
 
     sr_cost = @expression( model, sum((sr[j])^2  for j=1:1:n))
     ux_cost = @expression( model, sum((ux[j])^2  for j=1:1:n))
     ax_cost = @expression( model, sum((ax[j])^2  for j=1:1:n))
     sa_cost = @expression( model, sum((sa[j])^2  for j=1:1:n))
-
-    # x_cost = @expression( model, sum( x[j]^2  for j=1:1:n))
-    # y_cost = @expression( model, sum( y[j]^2  for j=1:1:n))
-    # ψ_cost = @expression( model, sum( ψ[j]^2  for j=1:1:n))
-    # @objective(model, Min, 10*y_cost + 10*x_cost + 10*ψ_cost + 0.01*sr_cost + 0.01*ax_cost  + 0.01*sa_cost )
-    
-    # x_cost = @expression( model, sum( log(x[j]^2+1)  for j=1:1:n))
-    # y_cost = @expression( model, sum( log(y[j]^2+1)  for j=1:1:n))
-    # ψ_cost = @expression( model, sum( log(ψ[j]^2+1)  for j=1:1:n))
-    # @objective(model, Min, 1*y_cost + 1*x_cost + 1*ψ_cost + 0.01*sr_cost + 0.01*ax_cost  + 0.01*sa_cost )
-
-    # x_cost = @expression( model, sum( x[j]^2  for j=1:1:n))
-    # y_cost = @expression( model, sum( y[j]^2  for j=1:1:n))
-    # ψ_cost = @expression( model, sum( ψ[j]^2  for j=1:1:n))
-    # @objective(model, Min, 100*y_cost + 1*x_cost + 100*ψ_cost + 0.01*sr_cost + 0.01*ax_cost  + 0.01*sa_cost )
-
-    # x_cost = @expression( model, sum( log(x[j]^2+1)  for j=1:1:n))
-    # y_cost = @expression( model, sum( y[j]^2  for j=1:1:n))
-    # ψ_cost = @expression( model, sum( ψ[j]^2  for j=1:1:n))
-    # @objective(model, Min, 100*y_cost + 1*x_cost + 100*ψ_cost + 0.01*sr_cost + 0.01*ax_cost  + 0.01*sa_cost )
-
-    # x_cost = @expression( model, sum( x[j]^2  for j=1:1:n))
-    # y_cost = @expression( model, sum( y[j]^2  for j=1:1:n))
-    # ψ_cost = @expression( model, sum( ψ[j]^2  for j=1:1:n))
-    # @objective(model, Min, 100*y_cost + 1*x_cost/(y_cost+0.1) + 100*ψ_cost + 0.01*sr_cost + 0.01*ax_cost + 0.01*sa_cost )
-
-    # x_cost = @expression( model, sum( x[j]^2  for j=1:1:n))
-    # y_cost = @expression( model, sum( abs(y[j])^1.5  for j=1:1:n))
-    # ψ_cost = @expression( model, sum( ψ[j]^2  for j=1:1:n))
-    # @objective(model, Min, 10*y_cost + 1*x_cost + 100*ψ_cost + 0.01*sr_cost + 0.01*ax_cost + 0.01*sa_cost )
-
-    x_cost = @expression( model, sum( x[j]^2  for j=1:1:n))
-    y_cost = @expression( model, sum( y[j]^2  for j=1:1:n))
-    ψ_cost = @expression( model, sum( ψ[j]^2  for j=1:1:n))
+    x_cost = @expression( model, sum( x[j]^2  for j=1:1:n-1))
+    y_cost = @expression( model, sum( y[j]^2  for j=1:1:n-1))
+    ψ_cost = @expression( model, sum( ψ[j]^2  for j=1:1:n-1))
     terminalcost = @expression(model, x[end]^2 + 10 * y[end]^2 + ψ[end]^2 + ux[end]^2 )
     @objective(model, Min, 10*y_cost + 0.5*x_cost + 100 * terminalcost + 50*ψ_cost + 0.15 *ux_cost + 0.01*sr_cost + 0.01*ax_cost + 0.01*sa_cost + 10 * tf )
 
@@ -165,7 +119,7 @@ end
 
 function getInterpolatedCtrls(model, problem_setting, current_sim_time)
     optCtrls = value.(model[:u])
-    Horizon = problem_setting["Horizon"]
+    Horizon = value(model[:tf])
     n = problem_setting["n"]
     time_list = collect(range(current_sim_time, current_sim_time + Horizon, length=n))
     InterpolateSr = interpolate((time_list ,), optCtrls[:,1], Gridded(Constant{Next}()))
@@ -222,14 +176,8 @@ function plotRes(problem_setting, states_his, optStates)
     vehSpace = problem_setting["vehSpace"]
 
 	h = plot(size = [2*600, 2*300])
-	# h = plot()
-    # h = plot!(h, circleShape(0,0, 1), seriestype = [:shape,], ;w = 0.5, aspect_ratio=:equal, c=:red, linecolor = :red, legend = false, fillalpha = 1.0)
-    # for obs_idx = 1:1:size(obs_setting, 1)
-    #     h = plot!(h, circleShape(obs_setting[obs_idx, 1], obs_setting[obs_idx, 2], obs_setting[obs_idx, 3] - 2.5, obs_setting[obs_idx, 4]-0.8), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 1.0)
-	# 	h = plot!(h, circleShape(obs_setting[obs_idx, 1], obs_setting[obs_idx, 2], obs_setting[obs_idx, 3], obs_setting[obs_idx, 4]), seriestype = [:shape,], ;w = 0.5, c=:black, linecolor = :black, legend = false, fillalpha = 0.2)
-    # end
-
-    h = plot!(h, ObsShape(vehLength+vehSpace, 0, 0),
+    
+    h = plot!(h, ObsShape(0, -(vehWidth+vehSpace), 0),
     seriestype = [:shape],
     lw = 0.5,
     c = :black,
@@ -237,7 +185,7 @@ function plotRes(problem_setting, states_his, optStates)
     fillalpha = 1
     )
 
-    h = plot!(h, ObsShape(-vehLength-vehSpace, 0, 0),
+    h = plot!(h, ObsShape(0, (vehWidth+vehSpace), 0),
     seriestype = [:shape],
     lw = 0.5,
     c = :black,
@@ -253,7 +201,7 @@ function plotRes(problem_setting, states_his, optStates)
 	fillalpha = 1
 	)
     h = plot!(h, optStates[:,1], optStates[:,2],lw = 2, aspect_ratio=:equal, lc=:red, legend=false)
-    h = plot!(states_his[2,:], states_his[3,:], lw = 2, aspect_ratio=:equal, lc=:green, xlims = (-10, 12), ylims = (-5, 7.5), fillalpha = 1.0, xlabel = "X (m)", ylabel = "Y (m)", xtickfontsize=16, ytickfontsize=16, xguidefontsize=18, yguidefontsize=18, bottom_margin = 10mm, left_margin = 10mm)
+    h = plot!(states_his[2,:], states_his[3,:], lw = 2, legend=false, aspect_ratio=:equal, lc=:green, xlims = (-5, 15), ylims = (-10, 5), fillalpha = 1.0, xlabel = "X (m)", ylabel = "Y (m)", xtickfontsize=16, ytickfontsize=16, xguidefontsize=18, yguidefontsize=18, bottom_margin = 10mm, left_margin = 10mm)
     return h
 
 end
@@ -261,8 +209,6 @@ function vehicleShape(x,y,yaw)
 	c = cos(yaw)
 	s = sin(yaw)
 	R = [c -s; s c]
-	# nodes = [0 0 -3.61 -3.61 0 0; 0 0.78 0.78 -0.78 -0.78 0]
-	# nodes = [2.5 2.5 -2.5 -2.5 2.5 2.5; 0 0.9 0.9 -0.9 -0.9 0]
     nodes = [0.0 0.0 3.4 3.4 0.0 0.0; 0 0.9 0.9 -0.9 -0.9 0]
 	rotatedNodes = R * nodes
 	x .+ rotatedNodes[1,:], y .+ rotatedNodes[2,:]
@@ -272,8 +218,6 @@ function ObsShape(x,y,yaw)
 	c = cos(yaw)
 	s = sin(yaw)
 	R = [c -s; s c]
-	# nodes = [0 0 -3.61 -3.61 0 0; 0 0.78 0.78 -0.78 -0.78 0]
-	# nodes = [l l -l -l l l; 0 w w -w -w 0]
     nodes = [0.0 0.0 3.4 3.4 0.0 0.0; 0 0.9 0.9 -0.9 -0.9 0]
 	rotatedNodes = R * nodes
 	x .+ rotatedNodes[1,:], y .+ rotatedNodes[2,:]
