@@ -104,7 +104,7 @@ function defineCISOCP(problem_setting)
     smx = 0.5
     smy = 0.7 + 0.9
 
-    yConstraint = @constraint(model, [j=1:n], y[j] >= YL[j])#
+    yConstraint = @constraint(model, [j=1:n], y[j] >= YL[j])
     alphaf = @expression(model, [j=1:n], atan((v[j] + 1.56 * r[j]) / (ux+ 0.01)) - sa[j])
     alphar = @expression(model, [j=1:n], atan((v[j] - 1.64 * r[j]) / (ux+ 0.01)))
     @constraint(model, [j = 2:n], deg2rad(-8) <= alphaf[j] <= deg2rad(8))
@@ -112,15 +112,11 @@ function defineCISOCP(problem_setting)
 
     v_cost = @expression( model, sum((v[j])^2  for j=1:1:n))
     sr_cost = @expression( model, sum((sr[j])^2  for j=1:1:n))
-    # y_cost = @expression( model, sum( (y[j] - 3.6)^2  for j=1:1:n))
     y_cost = @expression( model, sum( (y[j])^2  for j=1:1:n))
     alpha_cost = @expression(model, sum( (alphaf[j])^2 + (alphar[j])^2  for j=1:1:n))
-
-    # y_cost = @expression( model, sum( (y[j]- 10*sin(x[j]/15))^2  for j=1:1:n))
-
     sa_cost = @expression( model, sum((sa[j])^2  for j=1:1:n))
 
-    @objective(model, Min, 0.01*y_cost + 1*sr_cost + 0.01*v_cost + 0.8*sa_cost + 0.5 * alpha_cost )
+    @objective(model, Min, 0.1*y_cost + 1*sr_cost + 0.01*v_cost + 0.8*sa_cost + 0.5 * alpha_cost )
     set_silent(model)  # Hide solver's verbose output
     return model
 end
@@ -130,7 +126,7 @@ function determinePoints(x0, speed, block_list, Δt, n)
     EndPoint = max(min(((block_list[1] + block_list[3] - x0) / speed) / Δt  , n), 0)
     YL =  -0.9 * ones(n)
     if EndPoint > 0 && x0 >= 0
-        YL[Int(floor(BeginPoint)): Int(ceil(EndPoint))] .= block_list[4] + 0.9 + 0.3
+        YL[Int(floor(BeginPoint)): Int(ceil(EndPoint))] .= block_list[4] + 1. + 0.3
     end
     return YL
 end

@@ -1,5 +1,5 @@
 # one way to tackle initial guess: https://jso-docs.github.io/solve-pdenlpmodels-with-jsosolvers/
-
+cd(@__DIR__)
 
 include("src/CISUtils.jl")
 
@@ -17,7 +17,7 @@ exec_horizon = 0.05
 ########################   Settings on the Slalom Scenario ######################## 
 
 cur_states = [-30.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-block_list = [48 0 10 1.8]
+block_list = [50 0 10 1.8] #[x position of center, y position of center, length/2, width/2]
 ########################   Transcribe into mathematical prohramming ######################## 
 XL = [-40, -0.9, -7, -pi/5,  -pi/2, -pi/12]
 XU = [1000, 4.5, 7, pi/5,  pi/2, pi/12]
