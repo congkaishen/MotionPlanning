@@ -1,5 +1,5 @@
 # one way to tackle initial guess: https://jso-docs.github.io/solve-pdenlpmodels-with-jsosolvers/
-
+cd(@__DIR__)
 
 include("src/SlalomUtils.jl")
 
