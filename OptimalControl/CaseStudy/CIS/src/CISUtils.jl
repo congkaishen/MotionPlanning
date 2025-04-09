@@ -126,7 +126,7 @@ function determinePoints(x0, speed, block_list, Δt, n)
     EndPoint = max(min(((block_list[1] + block_list[3] - x0) / speed) / Δt  , n), 0)
     YL =  -0.9 * ones(n)
     if EndPoint > 0 && x0 >= 0
-        YL[Int(floor(BeginPoint)): Int(ceil(EndPoint))] .= block_list[4] + 1. + 0.3
+        YL[Int(floor(BeginPoint)): Int(ceil(EndPoint))] .= block_list[4] + 0.9 + 0.4
     end
     return YL
 end
