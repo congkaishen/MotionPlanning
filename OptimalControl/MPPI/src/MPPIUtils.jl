@@ -42,7 +42,7 @@ function TrajectoryRollout(MPPI::MPPISearcher, ctrl_list)
 		dynamics_info = Rungekutta2(MPPI, states, ctrl_list[j,:],  dt)
 		states = dynamics_info[1]
 		constraint_his[j] = dynamics_info[2] * collision_info[1] * bounds_info[1]
-		cost_his[j] = dynamics_info[3] + bounds_info[2] + collision_info[2] + MPPI.s.lambda * MPPI.s.NominalControl[j, :]' * MPPI.s.Σ * (ctrl_list[j,:] - MPPI.s.NominalControl[j, :])
+		cost_his[j] = dynamics_info[3] + bounds_info[2] + collision_info[2] + MPPI.s.lambda * MPPI.s.NominalControl[j, :]' * inv(MPPI.s.Σ) * (ctrl_list[j,:] - MPPI.s.NominalControl[j, :])
 		states_his[j+1,:] = states
 	end
 
