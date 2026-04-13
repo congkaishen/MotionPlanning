@@ -38,6 +38,7 @@ end
     actualpath = Matrix{Any}[]
     planning_time::Float64 = 0.0
     final_cost::Float64 = 0.0
+    path_length::Float64 = 0.0
 end
 
 

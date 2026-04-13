@@ -109,6 +109,7 @@ function planDKA!(dka::DKASearcher)
                 actualpath[i,:] = TransferCoordinate(dka, position_val)
             end
             dka.r.actualpath  = actualpath
+            dka.r.path_length = sum(norm(actualpath[i+1, :] - actualpath[i, :]) for i in 1:size(actualpath, 1)-1)
             @goto escape_label
         end
 

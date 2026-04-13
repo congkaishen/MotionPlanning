@@ -39,5 +39,6 @@ end
 dka = defineDKA(BoundPosition, [51, 51], starting_pose[1:2], ending_pose[1:2], draw_fig, make_gif)
 defineDKAobs!(dka, obs_location)
 @time planDKA!(dka)
+println("Path length: $(round(dka.r.path_length, digits=3)) m")
 h = plotRes(dka)
 display(h)

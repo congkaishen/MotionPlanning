@@ -35,6 +35,7 @@ end
     dkapath = Matrix{Any}[]
     actualpath = Matrix{Any}[]
     planning_time::Float64 = 0.0
+    path_length::Float64 = 0.0
 end
 
 

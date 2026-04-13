@@ -126,6 +126,7 @@ function planAstar!(astar::AstarSearcher)
                 actualpath[i,:] = TransferCoordinate(astar, position_val)
             end
             astar.r.actualpath  = actualpath
+            astar.r.path_length = sum(norm(actualpath[i+1, :] - actualpath[i, :]) for i in 1:size(actualpath, 1)-1)
             @goto escape_label
         end
 
